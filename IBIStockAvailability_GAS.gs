@@ -1,4 +1,7 @@
-// IBI Stock Availability — GAS Backend v1.0
+// IBI Stock Availability — GAS Backend v1.1
+// v1.1: the add duplicate-guard fingerprint now includes p.nonce, so the app's
+//       Undo (restore of a just-deleted row) is never wrongly suppressed.
+//       Optional redeploy — v1.7 app works with the v1.0 backend too.
 // India Business International — Stock & Inventory Availability
 // Sheet ID: 1bp0OpZJKWB3-xEDKAgk5EErQ4JVg3uwmF2QAM35K6lA  (first tab, gid=0)
 // All requests via GET (URL params) — avoids CORS/redirect issues.
@@ -39,7 +42,7 @@ function doGet(e) {
   let result;
   try {
     switch (action) {
-      case 'ping':   result = { status:'ok', message:'IBI Stock Availability GAS v1.0 is live!' }; break;
+      case 'ping':   result = { status:'ok', message:'IBI Stock Availability GAS v1.1 is live!' }; break;
       case 'getAll': result = getAllItems(); break;
       case 'add':    result = addItem(p); break;
       case 'update': result = updateItem(p); break;
@@ -112,8 +115,10 @@ function addItem(p) {
   const sh = getSheet();
 
   // Duplicate-submit guard: a cold start / double-tap can fire the same add twice.
+  // p.nonce (sent by the app's Undo-restore) is part of the fingerprint so that
+  // re-adding a just-deleted row is never wrongly suppressed as a duplicate.
   const cache = CacheService.getScriptCache();
-  const fp = ['add', p.category, p.product, p.hsn, p.packed, p.loose, p.damage]
+  const fp = ['add', p.category, p.product, p.hsn, p.packed, p.loose, p.damage, p.nonce]
              .map(x => String(x == null ? '' : x).trim()).join('|');
   const key = 'stk_' + Utilities.base64EncodeWebSafe(
               Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, fp));

@@ -262,6 +262,12 @@ tr.row-editing td{background:var(--info-bg) !important}
 .toast.success{background:var(--success-bg);color:var(--success-text);border:1px solid var(--success-border)}
 .toast.error{background:var(--danger-bg);color:var(--danger-text);border:1px solid var(--danger-border)}
 .toast.show{opacity:1}
+/* actionable toast (carries an ↩ Undo button) */
+.toast.actionable{pointer-events:auto;display:flex;align-items:center;gap:12px}
+.toast-undo{background:var(--cyan);color:#000;border:none;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
+.toast-undo:hover{opacity:0.85}
+.s-btn:disabled{opacity:.4;cursor:not-allowed}
+.s-btn:disabled:hover{border-color:var(--border2);color:var(--text2)}
 
 /* ── FOOTER ── */
 .footer{text-align:center;font-size:11px;color:var(--text3);padding:1rem 0 0.5rem;font-family:var(--font)}
@@ -354,7 +360,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge">v1.6</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge">v1.7</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -430,6 +436,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <div class="status-bar">
     <span class="status-txt"><span class="status-dot" id="statusDot"></span><span id="statusTxt">Connecting...</span></span>
     <div class="status-actions">
+      <button class="s-btn" id="undoBtn" onclick="undoLast()" disabled title="Nothing to undo"><i class="ti ti-arrow-back-up"></i> Undo</button>
       <button class="s-btn" onclick="loadAll()"><i class="ti ti-refresh"></i> Sync</button>
       <button class="s-btn rep-btn" onclick="openReport()"><i class="ti ti-report"></i> Report</button>
       <a class="s-btn" href="https://docs.google.com/spreadsheets/d/1bp0OpZJKWB3-xEDKAgk5EErQ4JVg3uwmF2QAM35K6lA/edit?gid=0#gid=0" target="_blank"><i class="ti ti-external-link"></i> Sheet</a>
@@ -609,7 +616,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v1.6 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v1.7 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -620,6 +627,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
   </div>
   <div class="drawer-section-label">App</div>
+  <button class="drawer-item" id="drawerUndoBtn" onclick="undoLast();closeDrawer()"><i class="ti ti-arrow-back-up"></i> Undo Last Change</button>
   <button class="drawer-item" onclick="loadAll();closeDrawer()"><i class="ti ti-refresh"></i> Sync with Google Sheet</button>
   <button class="drawer-item" onclick="closeDrawer();openReport()"><i class="ti ti-report"></i> Stock Report</button>
   <button class="drawer-item" onclick="exportCSV();closeDrawer()"><i class="ti ti-download"></i> Export CSV</button>
@@ -629,7 +637,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 1.6 — July 2026</div>
+  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 1.7 — July 2026 · Undo support</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -693,6 +701,88 @@ let items     = [];
 let editingId = null;
 let _saving   = false;   // re-entrancy guard
 let deferredPrompt = null;
+
+// ── UNDO ENGINE ──
+// Every successful add / update / delete pushes an inverse action onto this
+// stack (persisted in localStorage, so an accidental refresh keeps it). Undo
+// replays the inverse through the SAME GAS API the app already uses:
+//   undo an edit    → update the row back to its previous values
+//   undo a delete   → re-add the row with its previous values (fresh id)
+//   undo an add     → delete the newly added row
+const UNDO_KEY = 'ibi_stock_undo';
+const UNDO_MAX = 15;
+let undoStack = [];
+try{ undoStack = JSON.parse(localStorage.getItem(UNDO_KEY) || '[]') || []; }catch(_){ undoStack = []; }
+
+function persistUndo(){ try{ localStorage.setItem(UNDO_KEY, JSON.stringify(undoStack)); }catch(_){} }
+function pushUndo(entry){
+  undoStack.push({ ...entry, at: Date.now() });
+  if(undoStack.length > UNDO_MAX) undoStack.shift();
+  persistUndo(); updateUndoUI();
+}
+function updateUndoUI(){
+  const n = undoStack.length, top = undoStack[n-1];
+  const label = top ? ('Undo ' + top.label) : 'Nothing to undo';
+  const b = document.getElementById('undoBtn');
+  if(b){
+    b.disabled = !n;
+    b.innerHTML = '<i class="ti ti-arrow-back-up"></i> Undo' + (n ? ` (${n})` : '');
+    b.title = label;
+  }
+  const d = document.getElementById('drawerUndoBtn');
+  if(d){ d.style.opacity = n ? '1' : '0.45'; d.title = label; }
+}
+// Rebuild the full GAS param set from a snapshot (same fields saveEntry sends).
+function restoreParams(prev){
+  const p = {
+    category: prev.category||'', sno: prev.sno||'', product: prev.product||'',
+    hsn: prev.hsn||'', gst: prev.gst!=null?prev.gst:'',
+    packed: prev.packed!=null?prev.packed:'', loose: prev.loose!=null?prev.loose:'',
+    damage: prev.damage!=null?prev.damage:'', rating: prev.rating!=null?prev.rating:'',
+    keywords: prev.keywords||'', image: prev.image||''
+  };
+  for(let i=0;i<5;i++){
+    p['a'+(i+1)] = (prev.amazon   && prev.amazon[i]  !=null) ? prev.amazon[i]  : '';
+    p['f'+(i+1)] = (prev.flipkart && prev.flipkart[i]!=null) ? prev.flipkart[i] : '';
+  }
+  return p;
+}
+async function undoLast(){
+  const u = undoStack[undoStack.length-1];
+  if(!u){ showToast('Nothing to undo','error'); return; }
+  if(_saving){ showToast('Busy — try again in a moment','error'); return; }
+  if(!GAS_URL){ showToast('Connect the backend first','error'); openBackend(); return; }
+  _saving = true;
+  const b = document.getElementById('undoBtn'); if(b) b.disabled = true;
+  showToast('Undoing ' + u.label + '…');
+  try{
+    let res, treatAsDone = false;
+    if(u.type === 'update'){
+      const p = restoreParams(u.prev); p.action='update'; p.id=u.prev.id;
+      res = await gasCall(p, 1, 25000);
+      // Row deleted since the edit? Nothing left to restore onto — drop the entry.
+      if(res && res.status==='error' && /ID not found/i.test(res.message||'')) treatAsDone = true;
+    } else if(u.type === 'delete'){
+      const p = restoreParams(u.prev); p.action='add'; p.nonce=String(Date.now());
+      res = await gasCall(p, 1, 25000);
+    } else if(u.type === 'add'){
+      res = await gasCall({action:'delete', id:u.addedId}, 1, 25000);
+      // Already deleted by hand? Then the add is gone — that's what undo wanted.
+      if(res && res.status==='error' && /ID not found/i.test(res.message||'')) treatAsDone = true;
+    }
+    if((res && res.status==='ok') || treatAsDone){
+      undoStack.pop(); persistUndo();
+      showToast('↩ Undid ' + u.label);
+      await loadAll();
+    } else {
+      showToast('Undo failed: ' + ((res&&res.message)||'no response — tap Sync & retry'), 'error');
+    }
+  }catch(e){
+    showToast('Undo failed — check connection','error');
+  }finally{
+    _saving = false; updateUndoUI();
+  }
+}
 
 // ── THEME ──
 function applyTheme(light){
@@ -815,11 +905,19 @@ function setStatus(online, msg){
   document.getElementById('statusDot').className = 'status-dot ' + (online ? 'online' : 'error');
   document.getElementById('statusTxt').textContent = msg;
 }
-function showToast(msg, type='success'){
+function showToast(msg, type='success', undoable=false){
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + type + ' show';
-  setTimeout(() => t.className = 'toast ' + type, 3200);
+  clearTimeout(t._t);
+  if(undoable && undoStack.length){
+    // Actionable toast: message + an ↩ Undo button (stays a little longer).
+    t.innerHTML = `<span>${esc(msg)}</span><button class="toast-undo" onclick="undoLast()"><i class="ti ti-arrow-back-up"></i> Undo</button>`;
+    t.className = 'toast ' + type + ' show actionable';
+    t._t = setTimeout(() => t.className = 'toast ' + type, 7000);
+  } else {
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    t._t = setTimeout(() => t.className = 'toast ' + type, 3200);
+  }
 }
 function stockStatus(e){
   const p=+e.packed||0, l=+e.loose||0;
@@ -1006,6 +1104,9 @@ async function saveEntry(){
   btn.innerHTML='<div class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></div> '+(editingId?'Updating...':'Saving...');
   const wasEditing = editingId;
   const preCount   = items.length;
+  // Undo snapshots: the row's previous values (for edits) and the pre-save id set (for adds).
+  const prevSnap = wasEditing ? JSON.parse(JSON.stringify(items.find(x=>x.id===wasEditing) || null)) : null;
+  const preIds   = new Set(items.map(t=>t.id));
 
   const params = {
     action: editingId ? 'update' : 'add',
@@ -1030,11 +1131,11 @@ async function saveEntry(){
     ? list.some(t => t.id===editingId && matches(t))
     : (list.length > preCount && list.some(t => matches(t)));
 
-  let ok=false, hardErr=false, fresh=null;
+  let ok=false, hardErr=false, fresh=null, savedId='';
   try{
     try{
       const res = await gasCall(params, 1, 25000);
-      if(res && res.status==='ok') ok=true;
+      if(res && res.status==='ok'){ ok=true; savedId=res.id||''; }
       else if(res){ showToast('Error: '+res.message, 'error'); hardErr=true; }
     } catch(e){
       console.warn('Save response not received — will verify server-side.', e);
@@ -1049,10 +1150,18 @@ async function saveEntry(){
       }
     }
     if(ok){
-      showToast(wasEditing ? 'Updated in Google Sheet!' : 'Saved to Google Sheet!');
       cancelEdit();
       if(fresh){ items=fresh; setStatus(true,'Connected — Google Sheet'); buildCategoryLists(); render(); }
       else { await loadAll(); }
+      // Record the inverse action so the change can be undone.
+      if(wasEditing && prevSnap){
+        pushUndo({ type:'update', prev: prevSnap, label:'edit of “'+prevSnap.product+'”' });
+      } else if(!wasEditing){
+        let newId = savedId;
+        if(!newId){ const found = items.find(t=>!preIds.has(t.id) && matches(t)); if(found) newId = found.id; }
+        if(newId) pushUndo({ type:'add', addedId:newId, label:'adding “'+product+'”' });
+      }
+      showToast(wasEditing ? 'Updated in Google Sheet!' : 'Saved to Google Sheet!', 'success', true);
     } else if(!hardErr){
       showToast('Could not confirm — tap Sync to check', 'error');
     }
@@ -1066,9 +1175,12 @@ async function saveEntry(){
 async function deleteEntry(id){
   if(!confirm('Delete this stock item?')) return;
   if(editingId===id) cancelEdit();
+  // Undo snapshot: keep the row's full values so an accidental delete can be restored.
+  const prevSnap = JSON.parse(JSON.stringify(items.find(x=>x.id===id) || null));
+  const undoDel = () => { if(prevSnap) pushUndo({ type:'delete', prev: prevSnap, label:'delete of “'+prevSnap.product+'”' }); };
   try{
     const res = await gasCall({action:'delete', id});
-    if(res.status==='ok'){ showToast('Deleted'); await loadAll(); }
+    if(res.status==='ok'){ await loadAll(); undoDel(); showToast('Deleted', 'success', true); }
     else showToast('Delete failed: '+res.message, 'error');
   } catch(e){
     console.warn('Delete fetch threw, verifying...', e);
@@ -1077,7 +1189,7 @@ async function deleteEntry(id){
       const check = await gasCall({action:'getAll'});
       if(check.status === 'ok'){
         const stillExists = (check.items||[]).some(t => t.id === id);
-        if(!stillExists){ showToast('Deleted ✓ (verified OK)'); items = check.items || []; buildCategoryLists(); render(); }
+        if(!stillExists){ items = check.items || []; buildCategoryLists(); render(); undoDel(); showToast('Deleted ✓ (verified OK)', 'success', true); }
         else showToast('Delete failed — please try again', 'error');
       }
     } catch(e2){ showToast('Delete failed — check connection', 'error'); }
@@ -1352,6 +1464,7 @@ if('serviceWorker' in navigator){
 // ── INIT ──
 buildProductList();
 refreshSetupBanner();
+updateUndoUI();
 if(GAS_URL) loadAll();
 else { document.getElementById('loadingState').style.display='none'; document.getElementById('emptyState').style.display='block'; setStatus(false,'Backend not connected — open Menu → Backend Connection'); }
 </script>

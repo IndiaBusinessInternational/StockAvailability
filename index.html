@@ -331,7 +331,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge">v1.2</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge">v1.3</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -435,7 +435,8 @@ tr.row-editing td{background:var(--info-bg) !important}
       </div>
       <div class="form-group full">
         <label for="fProduct">Product Name</label>
-        <input type="text" id="fProduct" placeholder="e.g. Long Coconut Broomstick, 1 Qty">
+        <input type="text" id="fProduct" list="productList" autocomplete="off" placeholder="Choose from list or type a new name...">
+        <datalist id="productList"></datalist>
       </div>
       <div class="form-group">
         <label for="fHsn">HSN Code <span class="hint">(optional)</span></label>
@@ -585,7 +586,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v1.2 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v1.3 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -605,7 +606,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 1.2 — July 2026</div>
+  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 1.3 — July 2026</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -657,6 +658,7 @@ tr.row-editing td{background:var(--info-bg) !important}
 
 <div class="toast" id="toast"></div>
 
+<script src="products.js"></script>
 <script>
 // ── BACKEND URL (configurable — stored in localStorage) ──
 // Paste the deployed Apps Script /exec URL here to hardcode a default, or leave
@@ -889,6 +891,17 @@ function buildCategoryLists(){
   fc.innerHTML = opts; if([...fc.options].some(o=>o.value===prev)) fc.value=prev;
   const rc=document.getElementById('rCategory'), rprev=rc.value;
   rc.innerHTML = opts; if([...rc.options].some(o=>o.value===rprev)) rc.value=rprev;
+  buildProductList();
+}
+// Product Name suggestions: master catalog (products.js) merged with any names already
+// in the sheet, deduped case-insensitively. Free-typing a brand-new name is always allowed.
+function buildProductList(){
+  const map=new Map();
+  (window.IBI_PRODUCT_NAMES||[]).forEach(n=>{ const k=String(n).trim(); if(k) map.set(k.toLowerCase(),k); });
+  items.forEach(e=>{ const k=String(e.product||'').trim(); if(k && !map.has(k.toLowerCase())) map.set(k.toLowerCase(),k); });
+  const names=[...map.values()].sort((a,b)=>a.localeCompare(b));
+  const dl=document.getElementById('productList');
+  if(dl) dl.innerHTML = names.map(n=>`<option value="${esc(n)}"></option>`).join('');
 }
 function nextSno(){
   let mx=0; items.forEach(e=>{ const n=parseInt(e.sno,10); if(!isNaN(n)&&n>mx) mx=n; });
@@ -1296,6 +1309,7 @@ if('serviceWorker' in navigator){
 }
 
 // ── INIT ──
+buildProductList();
 refreshSetupBanner();
 if(GAS_URL) loadAll();
 else { document.getElementById('loadingState').style.display='none'; document.getElementById('emptyState').style.display='block'; setStatus(false,'Backend not connected — open Menu → Backend Connection'); }

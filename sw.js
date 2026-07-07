@@ -1,5 +1,5 @@
-const CACHE = 'ibi-stock-v1.2.0';
-const ASSETS = ['./index.html', './manifest.json'];
+const CACHE = 'ibi-stock-v1.3.0';
+const ASSETS = ['./index.html', './manifest.json', './products.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));

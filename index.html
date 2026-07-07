@@ -320,7 +320,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><span>IBI</span></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge">v1.0</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge">v1.1</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -573,7 +573,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v1.0 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v1.1 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -593,7 +593,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 1.0 — July 2026</div>
+  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 1.1 — July 2026</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -649,7 +649,7 @@ tr.row-editing td{background:var(--info-bg) !important}
 // ── BACKEND URL (configurable — stored in localStorage) ──
 // Paste the deployed Apps Script /exec URL here to hardcode a default, or leave
 // blank and connect it from the app (Menu → Backend Connection).
-const DEFAULT_GAS_URL = "";
+const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbzXTGd4PyjkGKoMr64VAYFKxKN23yZEzaMsUViOCJ8xEIvN9c8XgY00VF1VB6uBvslvOg/exec";
 let GAS_URL = localStorage.getItem('ibi_stock_gas_url') || DEFAULT_GAS_URL;
 
 let items     = [];

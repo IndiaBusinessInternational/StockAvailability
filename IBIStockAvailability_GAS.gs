@@ -69,9 +69,8 @@ function getAllItems() {
   let changed = false;
   for (let i = 0; i < data.length; i++) {
     let id = String(data[i][ID_COL - 1] || '').trim();
-    const blankRow = String(data[i][2] || '').trim() === '' &&   // no product
-                     String(data[i][1] || '').trim() === '';     // no category
-    if (!id && !blankRow) { id = 'SK' + base + '_' + (DATA_START + i); changed = true; }
+    const hasProduct = String(data[i][2] || '').trim() !== '';   // a real stock item has a product name
+    if (!id && hasProduct) { id = 'SK' + base + '_' + (DATA_START + i); changed = true; }
     data[i][ID_COL - 1] = id;
     idWrites.push([id]);
   }
@@ -80,8 +79,7 @@ function getAllItems() {
   const items = [];
   for (let i = 0; i < data.length; i++) {
     const r = data[i];
-    if (String(r[2] || '').trim() === '' && String(r[1] || '').trim() === '' &&
-        String(r[0] || '').trim() === '') continue;                       // skip fully blank rows
+    if (String(r[2] || '').trim() === '') continue;   // no product name → not a stock item, skip
     const iso = parseDateToISO_(r[9]);
     items.push({
       id:          String(r[ID_COL - 1] || ''),

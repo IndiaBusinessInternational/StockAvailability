@@ -225,7 +225,7 @@ function parseDateToISO_(v) {
   let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);              // yyyy-mm-dd
   if (m) return iso(m[1], +m[2], +m[3]);
 
-  m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);      // dd/mm/yyyy (Indian, day-first)
+  m = s.match(/^(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*[\/\-.]\s*(\d{4})$/);  // dd/mm/yyyy (Indian, day-first; tolerates spaces like "26 - 5 - 2026")
   if (m) {
     let a = +m[1], b = +m[2]; const y = m[3];
     let day, mon;

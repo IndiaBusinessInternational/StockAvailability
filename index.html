@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
 <!-- Inline SVG favicon with IBI text -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='10' fill='%23000'/><text x='32' y='44' font-family='Roboto,sans-serif' font-size='24' font-weight='700' fill='%2300c5ff' text-anchor='middle'>IBI</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 184 184'><rect width='184' height='184' rx='30' fill='%23000'/><g fill='%2300c5ff'><circle cx='24' cy='24' r='4.5'/><circle cx='58' cy='24' r='7.5'/><circle cx='92' cy='24' r='10.5'/><circle cx='126' cy='24' r='13.5'/><circle cx='160' cy='24' r='16.5'/><circle cx='24' cy='58' r='4.5'/><circle cx='58' cy='58' r='7.5'/><circle cx='92' cy='58' r='10.5'/><circle cx='126' cy='58' r='13.5'/><circle cx='160' cy='58' r='16.5'/><circle cx='24' cy='92' r='4.5'/><circle cx='58' cy='92' r='7.5'/><circle cx='92' cy='92' r='10.5'/><circle cx='126' cy='92' r='13.5'/><circle cx='160' cy='92' r='16.5'/><circle cx='24' cy='126' r='4.5'/><circle cx='58' cy='126' r='7.5'/><circle cx='92' cy='126' r='10.5'/><circle cx='126' cy='126' r='13.5'/><circle cx='160' cy='126' r='16.5'/><circle cx='24' cy='160' r='4.5'/><circle cx='58' cy='160' r='7.5'/><circle cx='92' cy='160' r='10.5'/><circle cx='126' cy='160' r='13.5'/><circle cx='160' cy='160' r='16.5'/></g></svg>">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -61,6 +61,8 @@ body[data-theme="light"]{color-scheme:light}
 .topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
 .ibi-logo{width:38px;height:38px;border-radius:8px;background:var(--black);border:1.5px solid var(--cyan);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .ibi-logo span{font-family:var(--font);font-weight:700;font-size:12px;color:var(--cyan);letter-spacing:0.5px}
+.ibi-logo .mark{width:26px;height:26px;fill:var(--cyan)}
+.hero-logo .mark{width:50px;height:50px;fill:var(--cyan)}
 .app-name{color:var(--cyan);font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ver-badge{font-size:10px;font-weight:700;background:var(--cyan);color:#000;padding:2px 7px;border-radius:20px;letter-spacing:0.04em;flex-shrink:0}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -314,13 +316,22 @@ tr.row-editing td{background:var(--info-bg) !important}
 </head>
 <body>
 
+<!-- IBI brand mark (halftone dot grid) — defined once, reused via <use> and as favicon/app icon -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="ibiMark" viewBox="0 0 184 184">
+<circle cx="24" cy="24" r="4.5"/><circle cx="58" cy="24" r="7.5"/><circle cx="92" cy="24" r="10.5"/><circle cx="126" cy="24" r="13.5"/><circle cx="160" cy="24" r="16.5"/>
+<circle cx="24" cy="58" r="4.5"/><circle cx="58" cy="58" r="7.5"/><circle cx="92" cy="58" r="10.5"/><circle cx="126" cy="58" r="13.5"/><circle cx="160" cy="58" r="16.5"/>
+<circle cx="24" cy="92" r="4.5"/><circle cx="58" cy="92" r="7.5"/><circle cx="92" cy="92" r="10.5"/><circle cx="126" cy="92" r="13.5"/><circle cx="160" cy="92" r="16.5"/>
+<circle cx="24" cy="126" r="4.5"/><circle cx="58" cy="126" r="7.5"/><circle cx="92" cy="126" r="10.5"/><circle cx="126" cy="126" r="13.5"/><circle cx="160" cy="126" r="16.5"/>
+<circle cx="24" cy="160" r="4.5"/><circle cx="58" cy="160" r="7.5"/><circle cx="92" cy="160" r="10.5"/><circle cx="126" cy="160" r="13.5"/><circle cx="160" cy="160" r="16.5"/>
+</symbol></svg>
+
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-inner">
     <div class="topbar-left">
-      <div class="ibi-logo"><span>IBI</span></div>
+      <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge">v1.1</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge">v1.2</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -356,7 +367,7 @@ tr.row-editing td{background:var(--info-bg) !important}
 <!-- HERO -->
 <div class="hero">
   <div class="hero-inner">
-    <div class="hero-logo"><span>IBI</span></div>
+    <div class="hero-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
     <div class="hero-info">
       <div class="hero-name">India Business International</div>
       <div class="hero-sub">Stock &amp; Inventory Availability — Kanyakumari</div>
@@ -528,8 +539,9 @@ tr.row-editing td{background:var(--info-bg) !important}
         <option value="damage">Has damage</option>
       </select>
       <select id="filterSort" onchange="render()">
+        <option value="added-desc">Recently added</option>
         <option value="sno-asc">S.No ↑</option>
-        <option value="updated-desc">Recently updated</option>
+        <option value="updated-desc">Date updated ↓</option>
         <option value="product-asc">Product A–Z</option>
         <option value="packed-desc">Packed ↓</option>
         <option value="loose-desc">Loose ↓</option>
@@ -573,7 +585,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v1.1 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v1.2 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -593,7 +605,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 1.1 — July 2026</div>
+  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 1.2 — July 2026</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -740,6 +752,16 @@ function fmtDate(iso){
   const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if(!m) return String(iso);
   return `${m[3]} ${_MON[+m[2]-1]} ${m[1]}`;
+}
+// Display a date from the parsed ISO, or fall back to parsing a raw dd/mm/yyyy cell
+// (tolerant of stray spaces like "26 - 5 - 2026"). Returns '' when there's nothing.
+function dispDate(e){
+  if(e.date) return fmtDate(e.date);
+  const raw=String(e.dateRaw||'').trim();
+  if(!raw) return '';
+  const m=raw.match(/^(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*[\/\-.]\s*(\d{4})$/);
+  if(m){ const mo=+m[2]; if(mo>=1&&mo<=12) return `${String(+m[1]).padStart(2,'0')} ${_MON[mo-1]} ${m[3]}`; }
+  return esc(raw);
 }
 function today(){ return new Date().toISOString().split('T')[0]; }
 function setStatus(online, msg){
@@ -1028,6 +1050,7 @@ function filtered(){
   const snoN=e=>{ const n=parseInt(e.sno,10); return isNaN(n)?1e9:n; };
   list.sort((a,b)=>{
     switch(sort){
+      case 'added-desc':  return (b.row||0)-(a.row||0);   // newest-appended row on top
       case 'product-asc': return String(a.product||'').localeCompare(String(b.product||''));
       case 'packed-desc': return (+b.packed||0)-(+a.packed||0);
       case 'loose-desc':  return (+b.loose||0)-(+a.loose||0);
@@ -1091,7 +1114,7 @@ function render(){
       <td class="center"><span class="pill ${st.cls}">${st.label}</span></td>
       <td class="center">${!isNaN(rating)&&rating>0?`<span class="rating-badge"><i class="ti ti-star-filled"></i>${rating}</span>`:'<span class="stk-zero">—</span>'}</td>
       <td class="num" style="font-size:12px">${amz?`<span class="price-amz">A ${money(amz)}</span>`:''}${amz&&flp?'<br>':''}${flp?`<span class="price-flp">F ${money(flp)}</span>`:''}${!amz&&!flp?'<span class="stk-zero">—</span>':''}</td>
-      <td style="font-size:12px;color:var(--text2)">${e.date?fmtDate(e.date):(e.dateRaw?esc(e.dateRaw):'—')}</td>
+      <td style="font-size:12px;color:var(--text2)">${dispDate(e)||'—'}</td>
       <td><div class="action-cell">
         <button class="action-btn edit" onclick="startEdit('${e.id}')" title="Edit"><i class="ti ti-pencil"></i></button>
         <button class="action-btn del"  onclick="deleteEntry('${e.id}')" title="Delete"><i class="ti ti-trash"></i></button>
@@ -1107,7 +1130,7 @@ function exportCSV(){
   const rows=[hdr];
   const sorted=[...items].sort((a,b)=>{ const na=parseInt(a.sno,10),nb=parseInt(b.sno,10); return (isNaN(na)?1e9:na)-(isNaN(nb)?1e9:nb)||(a.row||0)-(b.row||0); });
   sorted.forEach(e=>{
-    rows.push([e.sno||'',e.category||'',e.product||'',e.hsn||'',e.gst||'',e.packed||0,e.loose||0,e.damage||0,stockStatus(e).label,e.date?fmtDate(e.date):(e.dateRaw||''),e.rating||'',e.amazonAvg||avg(e.amazon||[])||'',e.flipkartAvg||avg(e.flipkart||[])||'',e.keywords||'']);
+    rows.push([e.sno||'',e.category||'',e.product||'',e.hsn||'',e.gst||'',e.packed||0,e.loose||0,e.damage||0,stockStatus(e).label,dispDate(e),e.rating||'',e.amazonAvg||avg(e.amazon||[])||'',e.flipkartAvg||avg(e.flipkart||[])||'',e.keywords||'']);
   });
   const P=items.reduce((s,e)=>s+(+e.packed||0),0), L=items.reduce((s,e)=>s+(+e.loose||0),0), Dm=items.reduce((s,e)=>s+(+e.damage||0),0);
   rows.push([],['','','','','TOTAL',P,L,Dm,'','','','','','']);

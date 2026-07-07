@@ -80,7 +80,7 @@ function getAllItems() {
   for (let i = 0; i < data.length; i++) {
     const r = data[i];
     if (String(r[2] || '').trim() === '') continue;   // no product name → not a stock item, skip
-    const iso = parseDateToISO_(r[9]);
+    const upd = parseUpdated_(r[9]);
     items.push({
       id:          String(r[ID_COL - 1] || ''),
       sno:         r[0] === '' || r[0] == null ? '' : String(r[0]).replace(/\.0$/, ''),
@@ -92,8 +92,9 @@ function getAllItems() {
       packed:      numOrBlank_(r[6]),
       loose:       numOrBlank_(r[7]),
       damage:      numOrBlank_(r[8]),
-      date:        iso,
-      dateRaw:     iso ? '' : String(r[9] || ''),
+      date:        upd.iso,
+      time:        upd.time,
+      dateRaw:     upd.iso ? '' : String(r[9] || ''),
       rating:      numOrBlank_(r[10]),
       keywords:    String(r[11] || ''),
       amazon:      [r[12], r[13], r[14], r[15], r[16]].map(numOrBlank_),
@@ -165,7 +166,7 @@ function findRowById_(sh, id) {
 function buildRow_(p, id) {
   const amz = [p.a1, p.a2, p.a3, p.a4, p.a5];
   const flp = [p.f1, p.f2, p.f3, p.f4, p.f5];
-  const dateVal = p.date ? fmtLong_(isoToDate_(p.date)) : fmtLong_(new Date());
+  const dateVal = fmtStamp_(new Date());   // auto "last updated" — current IST date + time, every add/update
   return [
     numOr_(p.sno, ''),         // 1  S.No
     p.category || '',          // 2  Category
@@ -212,6 +213,30 @@ function isoToDate_(iso) {
 function fmtLong_(d) {
   // Matches the user's existing style, e.g. "Tuesday, 7 July 2026".
   return Utilities.formatDate(d, TZ, "EEEE, d MMMM yyyy");
+}
+
+function fmtStamp_(d) {
+  // Auto "last updated" stamp, e.g. "28 May 2026, Thu, 01:38:00 PM"
+  return Utilities.formatDate(d, TZ, "dd MMM yyyy, EEE, hh:mm:ss a");
+}
+
+// Parse a "Date of Updation" cell into { iso, time }. Handles the new auto-stamp
+// (with time), legacy Date objects, and older date-only text formats.
+function parseUpdated_(v) {
+  if (v instanceof Date && !isNaN(v.getTime())) {
+    return { iso: Utilities.formatDate(v, TZ, "yyyy-MM-dd"), time: "" };
+  }
+  var s = String(v || '').trim();
+  if (!s) return { iso: '', time: '' };
+  var m = s.match(/^(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4}),\s*[A-Za-z]{3,},\s*(\d{1,2}:\d{2}:\d{2}\s*[AaPp][Mm])$/);
+  if (m) {
+    var mo = _MONTHS[m[2].slice(0, 3).toLowerCase()];
+    if (mo) return {
+      iso:  m[3] + '-' + ('0' + mo).slice(-2) + '-' + ('0' + (+m[1])).slice(-2),
+      time: m[4].toUpperCase()
+    };
+  }
+  return { iso: parseDateToISO_(s), time: '' };
 }
 
 const _MONTHS = { jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12 };

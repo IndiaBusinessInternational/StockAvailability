@@ -383,7 +383,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v1.11</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v1.12</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -604,9 +604,9 @@ tr.row-editing td{background:var(--info-bg) !important}
         <option value="damage">Has damage</option>
       </select>
       <select id="filterSort" onchange="render()">
+        <option value="updated-desc" selected>Date updated ↓</option>
         <option value="added-desc">Recently added</option>
         <option value="sno-asc">S.No ↑</option>
-        <option value="updated-desc">Date updated ↓</option>
         <option value="product-asc">Product A–Z</option>
         <option value="packed-desc">Packed ↓</option>
         <option value="loose-desc">Loose ↓</option>
@@ -650,7 +650,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v1.11 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v1.12 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -672,7 +672,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 1.11 — July 2026 · Low-stock alert &amp; sticky header</div>
+  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 1.12 — July 2026 · Default sort: Date updated</div>
 </div>
 
 <!-- REPORT MODAL -->

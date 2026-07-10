@@ -1,4 +1,4 @@
-const CACHE = 'ibi-stock-v1.11.0';
+const CACHE = 'ibi-stock-v1.12.0';
 const ASSETS = ['./index.html', './manifest.json', './products.js'];
 
 self.addEventListener('install', e => {

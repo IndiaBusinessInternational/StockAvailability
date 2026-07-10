@@ -1,4 +1,11 @@
-// IBI Stock Availability — GAS Backend v1.3
+// IBI Stock Availability — GAS Backend v1.4
+// v1.4: FIX — Loose/Damage (and any) numeric cells that were DATE-formatted in the
+//       sheet stored counts as date serials, so the app read them back blank
+//       ("Packed saved, Loose empty"). Now: writes force 'General' number format on
+//       each row (add/update/import) so counts stay numeric; reads recover any value
+//       that still comes back as a Date (numOrBlank_); a one-time auto-heal reformats
+//       all existing rows on first load after deploy; new `fixFormats` action re-runs
+//       it on demand. REDEPLOY required.
 // v1.3: CEO PIN moved server-side — `importNames` now requires p.pin === CEO_PIN,
 //       and `verifyCeo` lets the app validate the PIN without ever storing it in
 //       the page's JavaScript. REDEPLOY required.
@@ -51,13 +58,14 @@ function doGet(e) {
   let result;
   try {
     switch (action) {
-      case 'ping':        result = { status:'ok', message:'IBI Stock Availability GAS v1.3 is live!' }; break;
+      case 'ping':        result = { status:'ok', message:'IBI Stock Availability GAS v1.4 is live!' }; break;
       case 'getAll':      result = getAllItems(); break;
       case 'add':         result = addItem(p); break;
       case 'update':      result = updateItem(p); break;
       case 'delete':      result = deleteItem(p.id); break;
       case 'verifyCeo':   result = { status:'ok', valid: String(p.pin || '') === CEO_PIN }; break;
       case 'importNames': result = importNames(p); break;
+      case 'fixFormats':  result = fixFormats(); break;
       default:       result = { status:'error', message:'Unknown action: ' + action };
     }
   } catch(err) {
@@ -73,6 +81,16 @@ function getAllItems() {
   const sh = getSheet();
   const lastRow = sh.getLastRow();
   if (lastRow < DATA_START) return { status:'ok', items: [] };
+
+  // One-time auto-heal: older rows may have Loose/Damage (etc.) cells left as DATE
+  // format, which stores counts as date serials and reads back blank. Normalise the
+  // whole data range to 'General' once, so values are seen (and shown) as numbers.
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('fmtHealed') !== 'v1') {
+    _healNumberFormats_(sh);
+    SpreadsheetApp.flush();   // apply the format change before we read values below
+    props.setProperty('fmtHealed', 'v1');
+  }
 
   const n = lastRow - DATA_START + 1;
   const data = sh.getRange(DATA_START, 1, n, LAST_COL).getValues();
@@ -140,7 +158,9 @@ function addItem(p) {
   const row = buildRow_(p, id);
   // Append after the current last data row (keeps everything below the two headers).
   const target = Math.max(sh.getLastRow() + 1, DATA_START);
-  sh.getRange(target, 1, 1, LAST_COL).setValues([row]);
+  const rng = sh.getRange(target, 1, 1, LAST_COL);
+  rng.setNumberFormat('General');   // a freshly-appended row can inherit a stray DATE
+  rng.setValues([row]);             // format; force 'General' so counts stay numeric
 
   cache.put(key, id, 90);
   return { status:'ok', id: id, message:'Added.' };
@@ -183,7 +203,11 @@ function importNames(p) {
       sh.getRange(DATA_START, 1, removed, LAST_COL).clearContent();
     }
     var rows = clean.map(function (nm, i) { return nameRow_(nm, i + 1, 'SK' + base + '_' + i); });
-    if (rows.length) sh.getRange(DATA_START, 1, rows.length, LAST_COL).setValues(rows);
+    if (rows.length) {
+      var rRng = sh.getRange(DATA_START, 1, rows.length, LAST_COL);
+      rRng.setNumberFormat('General');
+      rRng.setValues(rows);
+    }
     return { status:'ok', mode:'replace', added: rows.length, removed: removed, total: rows.length };
   }
 
@@ -202,7 +226,9 @@ function importNames(p) {
   var newRows = toAdd.map(function (nm, i) { return nameRow_(nm, maxSno + 1 + i, 'SK' + base + '_' + i); });
   if (newRows.length) {
     var target = Math.max(sh.getLastRow() + 1, DATA_START);
-    sh.getRange(target, 1, newRows.length, LAST_COL).setValues(newRows);
+    var nRng = sh.getRange(target, 1, newRows.length, LAST_COL);
+    nRng.setNumberFormat('General');
+    nRng.setValues(newRows);
   }
   return { status:'ok', mode:'add', added: newRows.length, skipped: clean.length - newRows.length, total: clean.length };
 }
@@ -225,7 +251,9 @@ function updateItem(p) {
   const r  = findRowById_(sh, p.id);
   if (r < 0) return { status:'error', message:'ID not found: ' + p.id };
   const row = buildRow_(p, p.id);
-  sh.getRange(r, 1, 1, LAST_COL).setValues([row]);
+  const rng = sh.getRange(r, 1, 1, LAST_COL);
+  rng.setNumberFormat('General');   // clear any stray DATE format so counts stay numeric
+  rng.setValues([row]);
   return { status:'ok', message:'Updated: ' + p.id };
 }
 
@@ -283,6 +311,13 @@ function numOr_(v, dflt) {
 }
 function numOrBlank_(v) {
   if (v === '' || v == null) return '';
+  // A count written into a DATE-formatted cell reads back as a Date; recover the
+  // underlying serial (Sheets epoch = 1899-12-30). India has no DST, so the
+  // local-time difference cleanly cancels the timezone offset.
+  if (v instanceof Date && !isNaN(v.getTime())) {
+    const serial = Math.round((v.getTime() - new Date(1899, 11, 30, 0, 0, 0).getTime()) / 86400000);
+    return isNaN(serial) ? '' : serial;
+  }
   const n = parseFloat(v);
   return isNaN(n) ? '' : n;
 }
@@ -290,6 +325,29 @@ function avg_(arr) {
   const nums = arr.map(x => parseFloat(x)).filter(x => !isNaN(x) && x > 0);
   if (!nums.length) return '';
   return Math.round((nums.reduce((s, x) => s + x, 0) / nums.length) * 100) / 100;
+}
+
+// Normalise the whole data range to 'General' number format. This rescues numeric
+// cells (esp. Loose/Damage) that were saved into DATE-formatted cells — their real
+// value is intact, only the format was wrong, so 'General' makes them read/show as
+// numbers again. Text cells (product/category) and the string date-stamp are
+// unaffected by 'General'.
+function _healNumberFormats_(sh) {
+  const lastRow = sh.getLastRow();
+  if (lastRow < DATA_START) return;
+  const n = lastRow - DATA_START + 1;
+  const DATE_COL = 10;   // Date of Updation — leave its format alone
+  sh.getRange(DATA_START, 1, n, DATE_COL - 1).setNumberFormat('General');            // cols 1–9
+  sh.getRange(DATA_START, DATE_COL + 1, n, LAST_COL - DATE_COL).setNumberFormat('General'); // cols 11–25
+}
+
+// On-demand re-run of the format heal (also resets the one-time flag).
+function fixFormats() {
+  const sh = getSheet();
+  _healNumberFormats_(sh);
+  SpreadsheetApp.flush();
+  PropertiesService.getScriptProperties().setProperty('fmtHealed', 'v1');
+  return { status:'ok', message:'Number formats normalised for all rows.' };
 }
 
 function isoToDate_(iso) {

@@ -146,6 +146,21 @@ body[data-theme="light"]{color-scheme:light}
 .metric-value.damage{color:var(--danger-text)}
 .metric-sub{font-size:11px;color:var(--text3);margin-top:2px}
 
+/* ── LOW STOCK ALERT ── */
+.lowstock-alert{background:linear-gradient(180deg,rgba(245,158,11,0.10),rgba(245,158,11,0.03));border:1px solid var(--amber);border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:14px}
+.lsa-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.lsa-title{color:var(--amber);font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:0.04em}
+.lsa-count{background:var(--amber);color:#000;font-size:11px;font-weight:800;padding:1px 8px;border-radius:20px;letter-spacing:0}
+.lsa-view{background:none;border:1px solid var(--amber);color:var(--amber);border-radius:8px;cursor:pointer;padding:5px 10px;font-size:12px;font-family:var(--font);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.lsa-view:hover{background:var(--amber);color:#000}
+.lsa-sub{font-size:11.5px;color:var(--text2);margin:6px 0 8px}
+.lsa-chips{display:flex;flex-wrap:wrap;gap:6px}
+.lsa-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--text);cursor:pointer;max-width:100%}
+.lsa-chip:hover{border-color:var(--amber)}
+.lsa-chip .lsa-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.lsa-chip b{color:var(--amber);font-weight:700}
+.lsa-more{font-size:12px;color:var(--text3);align-self:center;padding:4px 4px}
+
 /* ── SECTION HEADER ── */
 .section-hdr{background:var(--black);border:1px solid var(--border);border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .section-title{color:var(--cyan);font-weight:700;font-size:14px;font-family:var(--font);display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:0.06em}
@@ -219,7 +234,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:0.8
 .filter-summary .fs-item{color:var(--text2);white-space:nowrap}
 .filter-summary .fs-item b{font-weight:700;margin-left:4px;color:var(--text)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:var(--cyan);border-bottom:1px solid var(--border);background:var(--black);text-transform:uppercase;letter-spacing:0.05em;font-family:var(--font);white-space:nowrap}
+th{padding:10px 12px;text-align:left;font-weight:600;font-size:11px;color:var(--cyan);border-bottom:1px solid var(--border);background:var(--black);text-transform:uppercase;letter-spacing:0.05em;font-family:var(--font);white-space:nowrap;position:sticky;top:0;z-index:10}
 td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-family:var(--font)}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--bg3)}
@@ -248,7 +263,7 @@ tr.row-editing td{background:var(--info-bg) !important}
 .action-btn.del:hover{color:var(--danger-text);background:var(--danger-bg)}
 .action-cell{display:flex;gap:6px;align-items:center;justify-content:center}
 .count-badge{font-size:11px;background:var(--bg3);color:var(--text2);padding:2px 9px;border-radius:20px;font-weight:400}
-.tbl-scroll{overflow-x:auto}
+.tbl-scroll{overflow:auto;max-height:calc(100vh - 62px);max-height:calc(100dvh - 62px);overscroll-behavior:contain}
 
 /* ── EMPTY / LOADING ── */
 .empty-state{text-align:center;padding:3rem;color:var(--text2);font-size:14px}
@@ -368,7 +383,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v1.10</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v1.11</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -438,6 +453,16 @@ tr.row-editing td{background:var(--info-bg) !important}
       <div class="metric-value damage" id="sumDamage">0</div>
       <div class="metric-sub">units damaged</div>
     </div>
+  </div>
+
+  <!-- LOW STOCK ALERT -->
+  <div class="lowstock-alert" id="lowStockAlert" style="display:none" role="alert">
+    <div class="lsa-head">
+      <span class="lsa-title"><i class="ti ti-alert-triangle-filled"></i> Low stock alert <span class="lsa-count" id="lowStockCount">0</span></span>
+      <button class="lsa-view" onclick="showLowStock()"><i class="ti ti-list-search"></i> View all</button>
+    </div>
+    <div class="lsa-sub">Packed + loose stock at <b>5 or below</b> — reorder soon:</div>
+    <div class="lsa-chips" id="lowStockChips"></div>
   </div>
 
   <!-- STATUS BAR -->
@@ -574,6 +599,7 @@ tr.row-editing td{background:var(--info-bg) !important}
       <select id="filterStatus" onchange="render()">
         <option value="all">All stock</option>
         <option value="in">In stock</option>
+        <option value="low">Low stock (≤5)</option>
         <option value="out">Out of stock</option>
         <option value="damage">Has damage</option>
       </select>
@@ -624,7 +650,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v1.10 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v1.11 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -646,7 +672,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 1.10 — July 2026 · Import product names</div>
+  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 1.11 — July 2026 · Low-stock alert &amp; sticky header</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -1415,6 +1441,7 @@ function filtered(){
     if(status!=='all'){
       const p=+e.packed||0, l=+e.loose||0, d=+e.damage||0;
       if(status==='in' && p+l<=0) return false;
+      if(status==='low' && !(p+l>0 && p+l<=5)) return false;
       if(status==='out' && p+l>0) return false;
       if(status==='damage' && d<=0) return false;
     }
@@ -1449,6 +1476,7 @@ function render(){
   document.getElementById('sumDamage').textContent=num(D);
   document.getElementById('sumOutOfStock').textContent=outCt+' out of stock';
   document.getElementById('countBadge').textContent=list.length;
+  renderLowStock();
 
   // filtered summary bar
   const q=document.getElementById('filterSearch').value.trim(),
@@ -1460,7 +1488,7 @@ function render(){
     document.getElementById('fsPacked').textContent=num(list.reduce((s,e)=>s+(+e.packed||0),0));
     document.getElementById('fsLoose').textContent=num(list.reduce((s,e)=>s+(+e.loose||0),0));
     document.getElementById('fsDamage').textContent=num(list.reduce((s,e)=>s+(+e.damage||0),0));
-    const parts=[]; if(fCat!=='all')parts.push(esc(fCat)); if(fStatus!=='all')parts.push({in:'In stock',out:'Out of stock',damage:'Has damage'}[fStatus]); if(q)parts.push('&ldquo;'+esc(q)+'&rdquo;');
+    const parts=[]; if(fCat!=='all')parts.push(esc(fCat)); if(fStatus!=='all')parts.push({in:'In stock',low:'Low stock',out:'Out of stock',damage:'Has damage'}[fStatus]); if(q)parts.push('&ldquo;'+esc(q)+'&rdquo;');
     document.getElementById('fsLabel').innerHTML='<i class="ti ti-filter"></i> '+parts.join(' &middot; ');
     fsBox.style.display='flex';
   } else fsBox.style.display='none';
@@ -1495,6 +1523,38 @@ function render(){
       </div></td>
     </tr>`;
   }).join('');
+}
+
+// ── LOW STOCK ALERT ──
+// Products still in stock but with packed + loose combined at 5 or below.
+function lowStockItems(){
+  return items
+    .filter(e=>{ const t=(+e.packed||0)+(+e.loose||0); return t>0 && t<=5; })
+    .sort((a,b)=>((+a.packed||0)+(+a.loose||0))-((+b.packed||0)+(+b.loose||0)));
+}
+function renderLowStock(){
+  const box=document.getElementById('lowStockAlert');
+  const low=lowStockItems();
+  if(!low.length){ box.style.display='none'; return; }
+  box.style.display='block';
+  document.getElementById('lowStockCount').textContent=low.length;
+  const MAX=12;
+  const chips=low.slice(0,MAX).map(e=>{
+    const p=+e.packed||0, l=+e.loose||0;
+    return `<span class="lsa-chip" onclick="showLowStock('${e.id}')" title="Packed ${p} · Loose ${l}">`
+      +`<span class="lsa-name">${esc(e.product||'(unnamed)')}</span> <b>${p+l}</b> left</span>`;
+  }).join('');
+  const more=low.length>MAX?`<span class="lsa-more">+${low.length-MAX} more…</span>`:'';
+  document.getElementById('lowStockChips').innerHTML=chips+more;
+}
+// Filter the list to low stock (and optionally focus/search a single product).
+function showLowStock(id){
+  document.getElementById('filterCategory').value='all';
+  document.getElementById('filterStatus').value='low';
+  if(id){ const e=items.find(x=>x.id===id); document.getElementById('filterSearch').value=e?(e.product||''):''; }
+  else document.getElementById('filterSearch').value='';
+  render();
+  document.getElementById('stockBody').closest('.table-wrap').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ── CSV EXPORT ──

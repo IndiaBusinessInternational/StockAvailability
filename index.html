@@ -310,6 +310,14 @@ tr.row-editing td{background:var(--info-bg) !important}
 .help-text{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px}
 .help-text code{background:var(--bg3);padding:1px 5px;border-radius:4px;color:var(--cyan);font-size:11px}
 .help-text a{color:var(--cyan)}
+.imp-opt{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--text);line-height:1.45;padding:8px 0;cursor:pointer}
+.imp-opt input[type=radio]{margin-top:2px;flex:0 0 auto;width:16px;height:16px;accent-color:var(--cyan)}
+.imp-opt span{flex:1 1 auto;min-width:0}
+.imp-status{font-size:12.5px;color:var(--cyan);min-height:18px;margin:4px 0;font-weight:600}
+.imp-preview{max-height:190px;overflow:auto;margin-top:6px}
+.imp-preview .imp-row{font-size:11.5px;color:var(--text2);padding:4px 8px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.imp-preview .imp-more{font-size:11px;color:var(--text3);padding:6px 8px;font-style:italic}
+#importFile{font-size:12.5px;color:var(--text2);width:100%}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
 
 /* ── MOBILE ── */
@@ -360,7 +368,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge">v1.9</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v1.10</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -616,7 +624,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v1.9 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v1.10 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -631,13 +639,14 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="loadAll();closeDrawer()"><i class="ti ti-refresh"></i> Sync with Google Sheet</button>
   <button class="drawer-item" onclick="closeDrawer();openReport()"><i class="ti ti-report"></i> Stock Report</button>
   <button class="drawer-item" onclick="exportCSV();closeDrawer()"><i class="ti ti-download"></i> Export CSV</button>
+  <button class="drawer-item" id="drawerImportBtn" style="display:none" onclick="closeDrawer();openImport()"><i class="ti ti-file-spreadsheet"></i> Import Product Names <span style="margin-left:auto;font-size:10px;color:var(--cyan)">CEO</span></button>
   <a class="drawer-item" href="https://docs.google.com/spreadsheets/d/1bp0OpZJKWB3-xEDKAgk5EErQ4JVg3uwmF2QAM35K6lA/edit?gid=0#gid=0" target="_blank" onclick="closeDrawer()"><i class="ti ti-external-link"></i> Open Google Sheet</a>
   <div class="drawer-section-label">Settings</div>
   <button class="drawer-item" onclick="toggleTheme();closeDrawer()"><i class="ti ti-sun"></i> Toggle Dark / Light Mode</button>
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:default;color:var(--text2);font-size:12px"><i class="ti ti-info-circle"></i> Version 1.9 — July 2026 · Undo support</div>
+  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 1.10 — July 2026 · Import product names</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -683,6 +692,38 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="btn-row">
       <button class="btn-save" onclick="saveBackend()"><i class="ti ti-check"></i> Save &amp; Connect</button>
       <button class="btn-clear" onclick="testBackend()">Test</button>
+    </div>
+  </div>
+</div>
+
+<div class="report-overlay" id="importOverlay" onclick="closeImport()"></div>
+<div class="report-modal" id="importModal" role="dialog" aria-modal="true" aria-label="Import Product Names" style="width:min(600px,94vw)">
+  <div class="report-hdr">
+    <span class="report-hdr-title"><i class="ti ti-file-spreadsheet"></i> Import Product Names</span>
+    <button class="drawer-close" onclick="closeImport()" aria-label="Close"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="report-body">
+    <div class="help-text">
+      Upload a <b>List of Product Names</b> file (<code>.xlsx</code>, <code>.xls</code> or <code>.csv</code>).
+      The product-name column is detected automatically. Only names are added — stock counts stay blank
+      for you to fill in later.
+    </div>
+    <div class="form-group">
+      <label for="importFile">Choose file</label>
+      <input type="file" id="importFile" accept=".xlsx,.xls,.csv,.txt" onchange="onImportFile(this)">
+    </div>
+    <div class="form-group">
+      <label>How to apply</label>
+      <label class="imp-opt"><input type="radio" name="impMode" value="add" checked>
+        <span><b>Add new names only</b> — keep existing rows, append names not already in the sheet.</span></label>
+      <label class="imp-opt"><input type="radio" name="impMode" value="replace">
+        <span><b>Replace everything</b> — delete all existing rows &amp; their stock, then load this list fresh.</span></label>
+    </div>
+    <div id="importStatus" class="imp-status"></div>
+    <div id="importPreview" class="imp-preview"></div>
+    <div class="btn-row">
+      <button class="btn-save" id="importGo" onclick="doImport()" disabled><i class="ti ti-upload"></i> Import</button>
+      <button class="btn-clear" onclick="closeImport()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1002,6 +1043,159 @@ async function gasCall(params, retries=2, timeoutMs=20000){
       console.warn(`gasCall attempt ${attempt} failed, retrying...`, e.message);
       await new Promise(r => setTimeout(r, 1500 * attempt));
     }
+  }
+}
+
+// POST to the GAS (form-urlencoded → no CORS preflight, fits large payloads
+// that would overflow a GET query string, e.g. a full product-name list).
+async function gasPost(params, timeoutMs=40000){
+  if(!GAS_URL) throw new Error('No backend URL set');
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), timeoutMs);
+  try{
+    const r = await fetch(GAS_URL, {method:'POST', redirect:'follow', signal:controller.signal,
+      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+      body: new URLSearchParams(params).toString()});
+    const text = await r.text();
+    clearTimeout(timer);
+    try{ return JSON.parse(text); }
+    catch(e){ throw new Error('Bad JSON: '+text.slice(0,80)); }
+  }catch(e){ clearTimeout(timer); throw e; }
+}
+
+// ── CEO LOCK ──
+// The Import feature is hidden from staff. Tapping the version number prompts
+// for the CEO password; only then is importing unlocked (for this session).
+const CEO_PIN = '8899';
+let ceoUnlocked = false;
+function ceoUnlock(){
+  if(ceoUnlocked){ openImport(); return; }
+  const pw = prompt('CEO access — enter password to manage the Product Names list:');
+  if(pw === null) return;                              // cancelled
+  if(String(pw).trim() !== CEO_PIN){ showToast('Incorrect password','error'); return; }
+  ceoUnlocked = true;
+  const b = document.getElementById('drawerImportBtn'); if(b) b.style.display='';
+  showToast('✓ CEO mode unlocked');
+  openImport();
+}
+
+// ── IMPORT PRODUCT NAMES (Excel / CSV) ──
+let _importNames = [];
+let _xlsxLoading = null;
+function loadXLSX(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  if(_xlsxLoading) return _xlsxLoading;
+  _xlsxLoading = new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload=()=>res(window.XLSX);
+    s.onerror=()=>rej(new Error('Could not load the Excel reader (needs internet the first time).'));
+    document.head.appendChild(s);
+  });
+  return _xlsxLoading;
+}
+// From an array-of-rows, find the product-name column and return clean names.
+function extractNames(rows){
+  if(!rows || !rows.length) return [];
+  const HEADERS=['name of the product','product name','product'];
+  const SKIP=new Set(['name of the product','product name','product','name','sl.no.','sl no','s.no','slno','sno','#','']);
+  // Locate the product-name column from a header cell in the first few rows.
+  let col=-1;
+  for(let r=0;r<Math.min(rows.length,4) && col<0;r++){
+    const cells=(rows[r]||[]).map(c=>String(c==null?'':c).trim().toLowerCase());
+    for(const h of HEADERS){ const idx=cells.indexOf(h); if(idx>=0){ col=idx; break; } }
+  }
+  if(col<0){ // no header → column with the most long-text cells
+    const counts={};
+    rows.forEach(row=>(row||[]).forEach((c,i)=>{ if(String(c==null?'':c).trim().length>4) counts[i]=(counts[i]||0)+1; }));
+    col=+(Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0]||0);
+  }
+  // Take every value in that column; header labels are dropped via SKIP, so no
+  // brittle start-row cursor is needed (a stray label mid-list won't truncate).
+  const out=[], seen=new Set();
+  for(let r=0;r<rows.length;r++){
+    const v=String((rows[r]||[])[col]==null?'':rows[r][col]).trim();
+    if(!v) continue;
+    const k=v.toLowerCase();
+    if(SKIP.has(k)||seen.has(k)) continue;
+    seen.add(k); out.push(v);
+  }
+  return out;
+}
+function parseNamesFromText(text){
+  const rows=[];
+  text.split(/\r?\n/).forEach(line=>{
+    let s=line.trim(); if(!s) return;
+    s=s.replace(/^"?\s*\d+\s*"?\s*[,\t]\s*/,'');   // drop a leading "12," / "12<tab>" Sl.No column
+    s=s.replace(/^"(.*)"$/,'$1').trim();
+    if(s) rows.push([s]);
+  });
+  return extractNames(rows);
+}
+async function onImportFile(input){
+  const file=input.files && input.files[0];
+  const go=document.getElementById('importGo');
+  const status=document.getElementById('importStatus');
+  _importNames=[]; go.disabled=true; document.getElementById('importPreview').innerHTML='';
+  if(!file) return;
+  status.textContent='Reading '+file.name+' …';
+  try{
+    let names=[];
+    const lower=file.name.toLowerCase();
+    if(lower.endsWith('.csv')||lower.endsWith('.txt')){
+      names=parseNamesFromText(await file.text());
+    }else{
+      const XLSX=await loadXLSX();
+      const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false,defval:''});
+      names=extractNames(rows);
+    }
+    _importNames=names;
+    if(!names.length){ status.textContent='No product names found in that file.'; return; }
+    status.textContent='Found '+names.length+' product name'+(names.length>1?'s':'')+'.';
+    const prev=document.getElementById('importPreview');
+    prev.innerHTML=names.slice(0,8).map(n=>'<div class="imp-row">'+esc(n)+'</div>').join('')
+      +(names.length>8?'<div class="imp-more">…and '+(names.length-8)+' more</div>':'');
+    go.disabled=false;
+  }catch(e){ status.textContent='⚠ '+e.message; }
+}
+function openImport(){
+  if(!ceoUnlocked){ ceoUnlock(); return; }   // staff cannot open the importer
+  _importNames=[];
+  document.getElementById('importStatus').textContent='';
+  document.getElementById('importPreview').innerHTML='';
+  document.getElementById('importGo').disabled=true;
+  const fi=document.getElementById('importFile'); if(fi) fi.value='';
+  const add=document.querySelector('input[name="impMode"][value="add"]'); if(add) add.checked=true;
+  document.getElementById('importModal').classList.add('open');
+  document.getElementById('importOverlay').classList.add('open');
+}
+function closeImport(){
+  document.getElementById('importModal').classList.remove('open');
+  document.getElementById('importOverlay').classList.remove('open');
+}
+async function doImport(){
+  if(!GAS_URL){ showToast('Connect the backend first','error'); openBackend(); return; }
+  if(!_importNames.length){ showToast('Choose a file first','error'); return; }
+  const mode=(document.querySelector('input[name="impMode"]:checked')||{}).value||'add';
+  if(mode==='replace' && !confirm('REPLACE EVERYTHING:\n\nThis deletes all '+(items?items.length:0)+' existing product rows and their stock counts, then loads '+_importNames.length+' fresh names.\n\nThis cannot be undone from the app. Continue?')) return;
+  const go=document.getElementById('importGo'); go.disabled=true;
+  const status=document.getElementById('importStatus');
+  status.textContent=(mode==='replace'?'Replacing with ':'Uploading ')+_importNames.length+' names… please wait';
+  try{
+    const res=await gasPost({action:'importNames', mode, names:JSON.stringify(_importNames)});
+    if(!res || res.status!=='ok') throw new Error((res&&res.message)||'Import failed');
+    const msg = mode==='replace'
+      ? ('Replaced — '+res.added+' products loaded'+(res.removed?(' (removed '+res.removed+')'):'')+'.')
+      : ('Added '+res.added+' new name'+(res.added===1?'':'s')+(res.skipped?(', '+res.skipped+' already present'):'')+'.');
+    showToast('✓ '+msg);
+    closeImport();
+    await loadAll();
+  }catch(e){
+    status.textContent='⚠ '+e.message;
+    go.disabled=false;
+    showToast('Import failed: '+e.message,'error');
   }
 }
 

@@ -1,4 +1,9 @@
-// IBI Stock Availability — GAS Backend v1.1
+// IBI Stock Availability — GAS Backend v1.2
+// v1.2: added `importNames` bulk action — seed the sheet from a "List of Product
+//       Names" file. mode 'replace' wipes all data rows then writes fresh
+//       name-only rows (blank stock); mode 'add' appends only names not already
+//       present. Sent via POST (form-urlencoded) so large lists fit. REDEPLOY
+//       required for the app's Import Product Names feature to work.
 // v1.1: the add duplicate-guard fingerprint now includes p.nonce, so the app's
 //       Undo (restore of a just-deleted row) is never wrongly suppressed.
 //       Optional redeploy — v1.7 app works with the v1.0 backend too.
@@ -42,11 +47,12 @@ function doGet(e) {
   let result;
   try {
     switch (action) {
-      case 'ping':   result = { status:'ok', message:'IBI Stock Availability GAS v1.1 is live!' }; break;
-      case 'getAll': result = getAllItems(); break;
-      case 'add':    result = addItem(p); break;
-      case 'update': result = updateItem(p); break;
-      case 'delete': result = deleteItem(p.id); break;
+      case 'ping':        result = { status:'ok', message:'IBI Stock Availability GAS v1.2 is live!' }; break;
+      case 'getAll':      result = getAllItems(); break;
+      case 'add':         result = addItem(p); break;
+      case 'update':      result = updateItem(p); break;
+      case 'delete':      result = deleteItem(p.id); break;
+      case 'importNames': result = importNames(p); break;
       default:       result = { status:'error', message:'Unknown action: ' + action };
     }
   } catch(err) {
@@ -133,6 +139,73 @@ function addItem(p) {
 
   cache.put(key, id, 90);
   return { status:'ok', id: id, message:'Added.' };
+}
+
+// ── BULK IMPORT PRODUCT NAMES ───────────────────────────────────────────────
+// Seed the sheet from a "List of Product Names" file (name-only rows, blank
+// stock, to be filled in manually). p.names = JSON array of names.
+//   mode 'replace' → wipe all existing data rows, then write the fresh list.
+//   mode 'add'     → append only names not already present (case-insensitive).
+function importNames(p) {
+  var names;
+  try { names = JSON.parse(p.names || '[]'); }
+  catch (e) { return { status:'error', message:'Bad names payload: ' + e }; }
+  if (!Array.isArray(names)) return { status:'error', message:'names must be a JSON array' };
+
+  // Clean + dedupe case-insensitively, preserving order.
+  var seen = {}, clean = [];
+  for (var i = 0; i < names.length; i++) {
+    var nm = String(names[i] == null ? '' : names[i]).trim();
+    if (!nm) continue;
+    var k = nm.toLowerCase();
+    if (seen[k]) continue;
+    seen[k] = true; clean.push(nm);
+  }
+
+  var mode    = (p.mode || 'add').toLowerCase();
+  var sh      = getSheet();
+  var lastRow = sh.getLastRow();
+  var base    = Date.now();
+
+  if (mode === 'replace') {
+    var removed = Math.max(0, lastRow - DATA_START + 1);
+    if (lastRow >= DATA_START) {
+      sh.getRange(DATA_START, 1, removed, LAST_COL).clearContent();
+    }
+    var rows = clean.map(function (nm, i) { return nameRow_(nm, i + 1, 'SK' + base + '_' + i); });
+    if (rows.length) sh.getRange(DATA_START, 1, rows.length, LAST_COL).setValues(rows);
+    return { status:'ok', mode:'replace', added: rows.length, removed: removed, total: rows.length };
+  }
+
+  // mode 'add' — append names not already in the sheet.
+  var existing = {}, maxSno = 0;
+  if (lastRow >= DATA_START) {
+    var cur = sh.getRange(DATA_START, 1, lastRow - DATA_START + 1, 3).getValues();  // S.No + Cat + Product
+    for (var j = 0; j < cur.length; j++) {
+      var pv = String(cur[j][2] || '').trim().toLowerCase();
+      if (pv) existing[pv] = true;
+      var sv = parseInt(cur[j][0], 10);
+      if (!isNaN(sv) && sv > maxSno) maxSno = sv;
+    }
+  }
+  var toAdd   = clean.filter(function (nm) { return !existing[nm.toLowerCase()]; });
+  var newRows = toAdd.map(function (nm, i) { return nameRow_(nm, maxSno + 1 + i, 'SK' + base + '_' + i); });
+  if (newRows.length) {
+    var target = Math.max(sh.getLastRow() + 1, DATA_START);
+    sh.getRange(target, 1, newRows.length, LAST_COL).setValues(newRows);
+  }
+  return { status:'ok', mode:'add', added: newRows.length, skipped: clean.length - newRows.length, total: clean.length };
+}
+
+// A product-name-only row: only S.No, Product and ID set; everything else blank
+// (no date stamp — these are catalog seeds to be filled in manually later).
+function nameRow_(name, sno, id) {
+  var row = [];
+  for (var i = 0; i < LAST_COL; i++) row.push('');
+  row[0]           = sno;    // 1  S.No
+  row[2]           = name;   // 3  Product
+  row[LAST_COL - 1] = id;    // 25 ID (col Y)
+  return row;
 }
 
 // ── UPDATE ─────────────────────────────────────────────────────────────────

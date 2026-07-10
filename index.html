@@ -1063,17 +1063,30 @@ async function gasPost(params, timeoutMs=40000){
   }catch(e){ clearTimeout(timer); throw e; }
 }
 
-// ── CEO LOCK ──
-// The Import feature is hidden from staff. Tapping the version number prompts
-// for the CEO password; only then is importing unlocked (for this session).
-const CEO_PIN = '8899';
+// ── CEO LOCK (server-verified) ──
+// The password is NOT stored in this page — it is checked by the Apps Script
+// backend (verifyCeo), and every import must carry it (importNames rejects a
+// wrong/absent PIN). The CEO's entry is held only in memory for the session, to
+// authorise imports; a reload clears it and re-locks. Revealing the importer in
+// dev tools is not enough to upload without knowing the password.
 let ceoUnlocked = false;
-function ceoUnlock(){
+let ceoPin = '';
+async function ceoUnlock(){
   if(ceoUnlocked){ openImport(); return; }
+  if(!GAS_URL){ showToast('Connect the backend first','error'); openBackend(); return; }
   const pw = prompt('CEO access — enter password to manage the Product Names list:');
   if(pw === null) return;                              // cancelled
-  if(String(pw).trim() !== CEO_PIN){ showToast('Incorrect password','error'); return; }
-  ceoUnlocked = true;
+  const pin = String(pw).trim();
+  if(!pin){ showToast('Enter the password','error'); return; }
+  showToast('Checking…');
+  let res;
+  try{ res = await gasPost({action:'verifyCeo', pin}); }
+  catch(e){ showToast('Could not reach backend','error'); return; }
+  if(!res || res.status!=='ok' || typeof res.valid==='undefined'){
+    showToast('Backend needs redeploy to enable CEO lock','error'); return;
+  }
+  if(!res.valid){ showToast('Incorrect password','error'); return; }
+  ceoUnlocked = true; ceoPin = pin;
   const b = document.getElementById('drawerImportBtn'); if(b) b.style.display='';
   showToast('✓ CEO mode unlocked');
   openImport();
@@ -1184,7 +1197,8 @@ async function doImport(){
   const status=document.getElementById('importStatus');
   status.textContent=(mode==='replace'?'Replacing with ':'Uploading ')+_importNames.length+' names… please wait';
   try{
-    const res=await gasPost({action:'importNames', mode, names:JSON.stringify(_importNames)});
+    const res=await gasPost({action:'importNames', mode, names:JSON.stringify(_importNames), pin:ceoPin});
+    if(res && res.code==='auth'){ ceoUnlocked=false; ceoPin=''; const b=document.getElementById('drawerImportBtn'); if(b) b.style.display='none'; closeImport(); throw new Error('CEO password no longer valid — please unlock again.'); }
     if(!res || res.status!=='ok') throw new Error((res&&res.message)||'Import failed');
     const msg = mode==='replace'
       ? ('Replaced — '+res.added+' products loaded'+(res.removed?(' (removed '+res.removed+')'):'')+'.')

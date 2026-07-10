@@ -1,4 +1,7 @@
-// IBI Stock Availability — GAS Backend v1.2
+// IBI Stock Availability — GAS Backend v1.3
+// v1.3: CEO PIN moved server-side — `importNames` now requires p.pin === CEO_PIN,
+//       and `verifyCeo` lets the app validate the PIN without ever storing it in
+//       the page's JavaScript. REDEPLOY required.
 // v1.2: added `importNames` bulk action — seed the sheet from a "List of Product
 //       Names" file. mode 'replace' wipes all data rows then writes fresh
 //       name-only rows (blank stock); mode 'add' appends only names not already
@@ -24,6 +27,7 @@
 // layout A–X is untouched. Amazon/Flipkart averages are written as plain numbers
 // (computed here) so no #DIV/0! errors appear.
 
+const CEO_PIN    = "8899";  // CEO password — gates importNames server-side (not exposed in the app's JS)
 const SHEET_ID   = "1bp0OpZJKWB3-xEDKAgk5EErQ4JVg3uwmF2QAM35K6lA";
 const SHEET_GID  = 0;      // first tab
 const DATA_START = 3;      // rows 1 & 2 are headers
@@ -47,11 +51,12 @@ function doGet(e) {
   let result;
   try {
     switch (action) {
-      case 'ping':        result = { status:'ok', message:'IBI Stock Availability GAS v1.2 is live!' }; break;
+      case 'ping':        result = { status:'ok', message:'IBI Stock Availability GAS v1.3 is live!' }; break;
       case 'getAll':      result = getAllItems(); break;
       case 'add':         result = addItem(p); break;
       case 'update':      result = updateItem(p); break;
       case 'delete':      result = deleteItem(p.id); break;
+      case 'verifyCeo':   result = { status:'ok', valid: String(p.pin || '') === CEO_PIN }; break;
       case 'importNames': result = importNames(p); break;
       default:       result = { status:'error', message:'Unknown action: ' + action };
     }
@@ -147,6 +152,11 @@ function addItem(p) {
 //   mode 'replace' → wipe all existing data rows, then write the fresh list.
 //   mode 'add'     → append only names not already present (case-insensitive).
 function importNames(p) {
+  // Server-side CEO gate: the write is refused unless the correct PIN is sent,
+  // so revealing the importer UI in dev tools is not enough to upload.
+  if (String(p.pin || '') !== CEO_PIN) {
+    return { status:'error', code:'auth', message:'Incorrect CEO password.' };
+  }
   var names;
   try { names = JSON.parse(p.names || '[]'); }
   catch (e) { return { status:'error', message:'Bad names payload: ' + e }; }

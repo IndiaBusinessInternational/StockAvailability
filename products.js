@@ -264,6 +264,7 @@ window.IBI_PRODUCT_NAMES = [
 "Tamarind Seedless Dry 1 kg, 15x15x23 cm",
 "Tapioca Cassava Stem Cuttings Live Plant, 20x2x2 cm, 70 gm each, 4 Qty",
 "Teak Wood Trowel, 30x15x8 cm, 1.37 kg, 1 Qty",
+"Therali Leaves, 100 Qty Pack, 1 Qty",
 "Therali Leaves, 50 Qty Pack, 1 Qty",
 "Thulasi Leaves, 50 Qty Pack, 1 Qty",
 "Traditional Coconuts Fresh 2 Qty",

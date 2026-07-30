@@ -4,3 +4,8 @@
 # Windows junk
 Thumbs.db
 desktop.ini
+
+# Apps Script backend — LOCAL MIRROR ONLY.
+# ⚠ GitHub Pages serves every committed file, so publishing this exposed the CEO PIN
+# at stock.indiabusinessinternational.online/IBIStockAvailability_GAS.gs. Never commit it.
+IBIStockAvailability_GAS.gs

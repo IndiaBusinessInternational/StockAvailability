@@ -322,6 +322,33 @@ tr.row-editing td{background:var(--info-bg) !important}
 .rep-table .num{text-align:right}
 .rep-empty{text-align:center;color:var(--text3);padding:20px;font-size:13px}
 .rep-empty i{display:block;font-size:30px;margin-bottom:8px}
+/* ── ANALYSIS REPORT (v2.0) ── */
+.rep-controls-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rep-summary.six{grid-template-columns:repeat(3,1fr)}
+.rep-card .sub{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.3}
+.rep-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;color:var(--text3);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.rep-meta b{color:var(--text2);font-weight:600}
+.rep-note{font-size:11.5px;color:var(--text3);margin:2px 0 8px;line-height:1.45}
+.rep-bar{display:block;height:6px;border-radius:4px;background:var(--bg4);overflow:hidden;min-width:56px}
+.rep-bar span{display:block;height:100%;background:var(--cyan);border-radius:4px}
+.rep-bar.warn span{background:var(--amber)}
+.rep-bar.bad span{background:var(--danger-text)}
+.rep-bar.good span{background:var(--success-text)}
+.rep-flag{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--info-bg);color:var(--info-text);white-space:nowrap}
+.rep-flag.ok{background:var(--success-bg);color:var(--success-text)}
+.rep-flag.warn{background:var(--warning-bg);color:var(--warning-text)}
+.rep-flag.bad{background:var(--danger-bg);color:var(--danger-text)}
+.rep-cls{display:inline-block;width:18px;text-align:center;font-size:10px;font-weight:700;padding:1px 0;border-radius:4px;background:var(--bg4);color:var(--text2)}
+.rep-cls.a{background:var(--success-bg);color:var(--success-text)}
+.rep-cls.b{background:var(--info-bg);color:var(--info-text)}
+.rep-cls.c{background:var(--bg4);color:var(--text2)}
+.rep-scroll{max-height:330px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius)}
+.rep-scroll .rep-table th{position:sticky;top:0;background:var(--bg3);z-index:1}
+.rep-prod{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rep-toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.rep-toc a{font-size:11px;color:var(--text2);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;text-decoration:none}
+.rep-toc a:hover{border-color:var(--cyan);color:var(--cyan)}
+.rep-hint{font-size:11px;color:var(--text3);margin-top:-6px}
 .help-text{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px}
 .help-text code{background:var(--bg3);padding:1px 5px;border-radius:4px;color:var(--cyan);font-size:11px}
 .help-text a{color:var(--cyan)}
@@ -362,7 +389,9 @@ tr.row-editing td{background:var(--info-bg) !important}
   .toast{left:10px;right:10px;bottom:10px;max-width:none}
   .install-banner,.setup-banner{padding:10px 12px}
   .app-name{font-size:13px}
-  .rep-summary{grid-template-columns:1fr 1fr}
+  .rep-summary,.rep-summary.six{grid-template-columns:1fr 1fr}
+  .rep-controls-row{grid-template-columns:1fr}
+  .rep-prod{max-width:150px}
 }
 </style>
 </head>
@@ -383,7 +412,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v1.13</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v2.0</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -471,7 +500,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="status-actions">
       <button class="s-btn" id="undoBtn" onclick="undoLast()" disabled title="Nothing to undo"><i class="ti ti-arrow-back-up"></i> Undo</button>
       <button class="s-btn" onclick="loadAll()"><i class="ti ti-refresh"></i> Sync</button>
-      <button class="s-btn rep-btn" onclick="openReport()"><i class="ti ti-report"></i> Report</button>
+      <button class="s-btn rep-btn" onclick="openReport()"><i class="ti ti-report-analytics"></i> Analysis</button>
       <a class="s-btn" href="https://docs.google.com/spreadsheets/d/1bp0OpZJKWB3-xEDKAgk5EErQ4JVg3uwmF2QAM35K6lA/edit?gid=0#gid=0" target="_blank"><i class="ti ti-external-link"></i> Sheet</a>
       <button class="s-btn" onclick="exportCSV()"><i class="ti ti-download"></i> CSV</button>
     </div>
@@ -650,7 +679,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v1.13 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v2.0 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -663,7 +692,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <div class="drawer-section-label">App</div>
   <button class="drawer-item" id="drawerUndoBtn" onclick="undoLast();closeDrawer()"><i class="ti ti-arrow-back-up"></i> Undo Last Change</button>
   <button class="drawer-item" onclick="loadAll();closeDrawer()"><i class="ti ti-refresh"></i> Sync with Google Sheet</button>
-  <button class="drawer-item" onclick="closeDrawer();openReport()"><i class="ti ti-report"></i> Stock Report</button>
+  <button class="drawer-item" onclick="closeDrawer();openReport()"><i class="ti ti-report-analytics"></i> Stock &amp; Inventory Analysis</button>
   <button class="drawer-item" onclick="exportCSV();closeDrawer()"><i class="ti ti-download"></i> Export CSV</button>
   <button class="drawer-item" id="drawerImportBtn" style="display:none" onclick="closeDrawer();openImport()"><i class="ti ti-file-spreadsheet"></i> Import Product Names <span style="margin-left:auto;font-size:10px;color:var(--cyan)">CEO</span></button>
   <a class="drawer-item" href="https://docs.google.com/spreadsheets/d/1bp0OpZJKWB3-xEDKAgk5EErQ4JVg3uwmF2QAM35K6lA/edit?gid=0#gid=0" target="_blank" onclick="closeDrawer()"><i class="ti ti-external-link"></i> Open Google Sheet</a>
@@ -672,21 +701,45 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 1.12 — July 2026 · Default sort: Date updated</div>
+  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 2.0 — July 2026 · Stock &amp; Inventory Analysis report</div>
 </div>
 
 <!-- REPORT MODAL -->
 <div class="report-overlay" id="reportOverlay" onclick="closeReport()"></div>
-<div class="report-modal" id="reportModal" role="dialog" aria-modal="true" aria-label="Stock Report">
+<div class="report-modal" id="reportModal" role="dialog" aria-modal="true" aria-label="Stock Analysis Report" style="width:min(1000px,96vw)">
   <div class="report-hdr">
-    <span class="report-hdr-title"><i class="ti ti-report"></i> Stock Availability Report</span>
+    <span class="report-hdr-title"><i class="ti ti-report-analytics"></i> Stock &amp; Inventory Analysis</span>
     <button class="drawer-close" onclick="closeReport()" aria-label="Close"><i class="ti ti-x"></i></button>
   </div>
   <div class="report-body">
     <div class="report-controls">
-      <div class="form-group">
-        <label for="rCategory">Category</label>
-        <select id="rCategory"><option value="all">All categories</option></select>
+      <div class="rep-controls-row">
+        <div class="form-group">
+          <label for="rCategory">Category</label>
+          <select id="rCategory"><option value="all">All categories</option></select>
+        </div>
+        <div class="form-group">
+          <label for="rBasis">Valuation basis</label>
+          <select id="rBasis">
+            <option value="blend">Blended avg (Amazon + Flipkart)</option>
+            <option value="amazon">Amazon average rate</option>
+            <option value="flipkart">Flipkart average rate</option>
+            <option value="low">Lowest listed rate</option>
+            <option value="high">Highest listed rate</option>
+          </select>
+        </div>
+      </div>
+      <div class="rep-controls-row">
+        <div class="form-group">
+          <label for="rRop">Reorder point (units)</label>
+          <input type="number" id="rRop" value="5" min="0" step="1" inputmode="numeric">
+          <div class="rep-hint">At or below this = replenish. Max cover = 3 &times; reorder point.</div>
+        </div>
+        <div class="form-group">
+          <label for="rDormant">Dormant after (days)</label>
+          <input type="number" id="rDormant" value="90" min="1" step="1" inputmode="numeric">
+          <div class="rep-hint">No stock movement recorded for this long = excess / obsolete.</div>
+        </div>
       </div>
       <button class="btn-save gen-btn" onclick="generateReport()"><i class="ti ti-file-analytics"></i> Generate Report</button>
     </div>
@@ -1574,8 +1627,24 @@ function exportCSV(){
   a.download='ibi_stock_availability.csv'; a.click();
 }
 
-// ── REPORT ──
+// ── STOCK & INVENTORY ANALYSIS REPORT (v2.0) ──
+// Rebuilt to standard inventory-management practice. The sheet holds no sales /
+// issue history, so anything that normally needs movement data (turns, days of
+// cover, annual usage-value ABC) is derived from value on hand and the last
+// stock-movement stamp instead — every such section says so in a note rather
+// than inventing a number.
+//   Sections: executive KPIs → key findings → stock health → ABC (Pareto) →
+//   category matrix → replenishment list → excess & obsolete → damage /
+//   shrinkage → count aging → channel pricing → GST exposure → data quality.
 let lastReport = null;
+const REP_BASIS = {
+  blend:    'Blended average (Amazon + Flipkart)',
+  amazon:   'Amazon average rate',
+  flipkart: 'Flipkart average rate',
+  low:      'Lowest listed rate',
+  high:     'Highest listed rate'
+};
+
 function openReport(){
   document.getElementById('reportModal').classList.add('open');
   document.getElementById('reportOverlay').classList.add('open');
@@ -1586,142 +1655,682 @@ function closeReport(){
 }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeReport(); closeBackend(); } });
 
+// ── report-local formatters ──
+function rMoney(n){ n=Number(n)||0; return '₹'+Math.round(n).toLocaleString('en-IN'); }
+function rPct(n){ if(n==null||isNaN(n)) return '—'; return (Math.round(n*10)/10).toFixed(1)+'%'; }
+function rBar(p,cls){ const w=Math.max(0,Math.min(100,Number(p)||0)); return `<span class="rep-bar ${cls||''}"><span style="width:${w}%"></span></span>`; }
+function rShare(a,b){ return b>0 ? (a/b)*100 : 0; }
+
+// Unit rate for valuation, per the chosen basis. Returns 0 when the SKU carries
+// no marketplace rate at all — those SKUs are counted separately so a big
+// "unpriced" population never silently deflates the stock value.
+function repRate(e, basis){
+  const rawA = (e.amazonAvg!==''&&e.amazonAvg!=null)   ? e.amazonAvg   : avg(e.amazon||[]);
+  const rawF = (e.flipkartAvg!==''&&e.flipkartAvg!=null)? e.flipkartAvg : avg(e.flipkart||[]);
+  let A=parseFloat(rawA), F=parseFloat(rawF);
+  A = (isNaN(A)||A<=0) ? null : A;
+  F = (isNaN(F)||F<=0) ? null : F;
+  switch(basis){
+    case 'amazon':   return A!=null?A:0;
+    case 'flipkart': return F!=null?F:0;
+    case 'low':      return (A!=null&&F!=null)?Math.min(A,F):(A!=null?A:(F!=null?F:0));
+    case 'high':     return (A!=null&&F!=null)?Math.max(A,F):(A!=null?A:(F!=null?F:0));
+    default:         return (A!=null&&F!=null)?(A+F)/2 :(A!=null?A:(F!=null?F:0));
+  }
+}
+
+// Days since the last stock movement was stamped. The sheet contains a few
+// genuinely future-dated cells (user data, not a parser bug) — those clamp to 0.
+function repAge(e){
+  if(!e.date) return null;
+  const m=String(e.date).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return null;
+  const then=new Date(+m[1], +m[2]-1, +m[3]);
+  const n=new Date(); const now=new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  const d=Math.floor((now-then)/86400000);
+  return d<0 ? 0 : d;
+}
+
 function reportData(){
-  const cat=document.getElementById('rCategory').value;
-  const rows = cat==='all' ? items.slice() : items.filter(e=>String(e.category||'').trim()===cat);
-  // group by category
-  const groups={};
-  rows.forEach(e=>{ const c=String(e.category||'Uncategorised').trim()||'Uncategorised'; (groups[c]=groups[c]||[]).push(e); });
-  const cats=Object.keys(groups).sort((a,b)=>a.localeCompare(b));
-  const catRows=cats.map(c=>{
-    const g=groups[c];
+  const cat    = document.getElementById('rCategory').value;
+  const basis  = document.getElementById('rBasis').value;
+  const rop    = Math.max(0, parseInt(document.getElementById('rRop').value,10)||0);
+  const dorm   = Math.max(1, parseInt(document.getElementById('rDormant').value,10)||90);
+  const src    = cat==='all' ? items.slice() : items.filter(e=>String(e.category||'').trim()===cat);
+
+  // ── enrich every SKU once ──
+  const P = src.map(e=>{
+    const packed=+e.packed||0, loose=+e.loose||0, damage=+e.damage||0;
+    const onHand=packed+loose;
+    const rate=repRate(e,basis);
+    const a=parseFloat((e.amazonAvg!==''&&e.amazonAvg!=null)?e.amazonAvg:avg(e.amazon||[]));
+    const f=parseFloat((e.flipkartAvg!==''&&e.flipkartAvg!=null)?e.flipkartAvg:avg(e.flipkart||[]));
+    const gstRaw=(e.gst===''||e.gst==null)?NaN:parseFloat(e.gst);
     return {
-      cat:c, count:g.length,
-      packed:g.reduce((s,e)=>s+(+e.packed||0),0),
-      loose:g.reduce((s,e)=>s+(+e.loose||0),0),
-      damage:g.reduce((s,e)=>s+(+e.damage||0),0),
-      out:g.filter(e=>(+e.packed||0)+(+e.loose||0)<=0).length
+      id:e.id, sno:e.sno,
+      product:String(e.product||'—'),
+      category:String(e.category||'').trim()||'Uncategorised',
+      hsn:String(e.hsn||'').trim(),
+      gst:isNaN(gstRaw)?null:gstRaw,
+      packed, loose, damage, onHand,
+      rate, value:onHand*rate, damageValue:damage*rate,
+      amz:(isNaN(a)||a<=0)?null:a,
+      flp:(isNaN(f)||f<=0)?null:f,
+      rating:(isNaN(parseFloat(e.rating))||parseFloat(e.rating)<=0)?null:parseFloat(e.rating),
+      age:repAge(e), updated:updatedFull(e)
     };
   });
+
   const tot={
-    count:rows.length,
-    packed:rows.reduce((s,e)=>s+(+e.packed||0),0),
-    loose:rows.reduce((s,e)=>s+(+e.loose||0),0),
-    damage:rows.reduce((s,e)=>s+(+e.damage||0),0),
-    out:rows.filter(e=>(+e.packed||0)+(+e.loose||0)<=0).length
+    skus:P.length,
+    packed:P.reduce((s,p)=>s+p.packed,0),
+    loose:P.reduce((s,p)=>s+p.loose,0),
+    onHand:P.reduce((s,p)=>s+p.onHand,0),
+    damage:P.reduce((s,p)=>s+p.damage,0),
+    value:P.reduce((s,p)=>s+p.value,0),
+    damageValue:P.reduce((s,p)=>s+p.damageValue,0),
+    priced:P.filter(p=>p.rate>0).length,
+    inStock:P.filter(p=>p.onHand>0).length,
+    out:P.filter(p=>p.onHand<=0).length
   };
-  const outList=rows.filter(e=>(+e.packed||0)+(+e.loose||0)<=0)
-    .sort((a,b)=>String(a.category||'').localeCompare(String(b.category||''))||String(a.product||'').localeCompare(String(b.product||'')));
-  return {label: cat==='all'?'All Categories':cat, catRows, tot, outList};
+  tot.unpriced   = tot.skus - tot.priced;
+  tot.fillRate   = rShare(tot.inStock, tot.skus);
+  tot.stockoutRate = rShare(tot.out, tot.skus);
+  tot.shrinkage  = rShare(tot.damage, tot.onHand + tot.damage);
+  tot.packedPct  = rShare(tot.packed, tot.onHand);
+  tot.belowRop   = P.filter(p=>p.onHand<=rop).length;
+
+  // Value analytics need at least one marketplace rate. When the sheet carries
+  // none (e.g. straight after a catalogue reload) every ₹ figure would be zero,
+  // so the report switches to a quantity basis and says so, instead of printing
+  // a page of ₹0 that reads like real data.
+  const valueMode = tot.priced>0;
+  const metric    = p => valueMode ? p.value : p.onHand;
+  const metricTot = valueMode ? tot.value : tot.onHand;
+  const metricLbl = valueMode ? 'value' : 'units';
+
+  // ── 1. stock health (mutually exclusive, most-urgent-wins) ──
+  const healthOf = p=>{
+    if(p.onHand<=0)               return 'out';
+    if(p.onHand<=rop)             return 'critical';
+    if(p.onHand<=rop*2)           return 'watch';
+    if(p.age==null||p.age>=dorm)  return 'excess';
+    return 'healthy';
+  };
+  P.forEach(p=>{ p.health=healthOf(p); });
+  const HEALTH=[
+    {key:'out',      label:'Out of stock',                     hint:'0 units on hand',                       cls:'bad'},
+    {key:'critical', label:'At / below reorder point',         hint:'1 – '+rop+' units',                cls:'bad'},
+    {key:'watch',    label:'Watch (within 2× reorder pt)', hint:(rop+1)+' – '+(rop*2)+' units',    cls:'warn'},
+    {key:'excess',   label:'Excess / dormant',                 hint:'healthy qty, no movement ≥'+dorm+'d', cls:'warn'},
+    {key:'healthy',  label:'Healthy & moving',            hint:'above 2× reorder pt, recently counted', cls:'good'}
+  ].map(h=>{
+    const g=P.filter(p=>p.health===h.key);
+    return {...h, skus:g.length, share:rShare(g.length,P.length),
+            units:g.reduce((s,p)=>s+p.onHand,0), value:g.reduce((s,p)=>s+p.value,0)};
+  });
+
+  // ── 2. ABC / Pareto on stock value (or units when no rates exist) ──
+  const ranked=P.filter(p=>metric(p)>0).sort((a,b)=>metric(b)-metric(a));
+  let cum=0;
+  ranked.forEach(p=>{ cum+=metric(p); p.cumPct=rShare(cum,metricTot); p.abc = p.cumPct<=80?'A':(p.cumPct<=95?'B':'C'); });
+  P.filter(p=>metric(p)<=0).forEach(p=>{ p.abc='C'; p.cumPct=100; });
+  const abcRows=['A','B','C'].map(k=>{
+    const g=P.filter(p=>p.abc===k);
+    return {cls:k, skus:g.length, skuPct:rShare(g.length,P.length),
+            units:g.reduce((s,p)=>s+p.onHand,0),
+            value:g.reduce((s,p)=>s+p.value,0),
+            pct:rShare(g.reduce((s,p)=>s+metric(p),0),metricTot),
+            out:g.filter(p=>p.onHand<=0).length};
+  });
+  const topValue=ranked.slice(0,12);
+
+  // ── 3. category matrix ──
+  const catKeys=[...new Set(P.map(p=>p.category))].sort((a,b)=>a.localeCompare(b));
+  const catRows=catKeys.map(c=>{
+    const g=P.filter(p=>p.category===c);
+    const on=g.reduce((s,p)=>s+p.onHand,0), dmg=g.reduce((s,p)=>s+p.damage,0);
+    const ages=g.map(p=>p.age).filter(a=>a!=null);
+    return {
+      cat:c, skus:g.length, packed:g.reduce((s,p)=>s+p.packed,0), loose:g.reduce((s,p)=>s+p.loose,0),
+      onHand:on, damage:dmg,
+      value:g.reduce((s,p)=>s+p.value,0),
+      valPct:rShare(g.reduce((s,p)=>s+p.value,0),tot.value),
+      out:g.filter(p=>p.onHand<=0).length,
+      fill:rShare(g.filter(p=>p.onHand>0).length,g.length),
+      dmgRate:rShare(dmg,on+dmg),
+      packedPct:rShare(g.reduce((s,p)=>s+p.packed,0),on),
+      avgAge:ages.length?Math.round(ages.reduce((s,a)=>s+a,0)/ages.length):null
+    };
+  }).sort((a,b)=>(valueMode ? b.value-a.value : b.onHand-a.onHand)||a.cat.localeCompare(b.cat));
+
+  // ── 4. replenishment list (min/max: min = reorder point, max = 3 x reorder point) ──
+  const maxCover=Math.max(rop*3, rop+1);
+  const reorder=P.filter(p=>p.onHand<=rop).map(p=>({
+    ...p, suggest:Math.max(0, maxCover-p.onHand)
+  })).map(p=>({...p, cost:p.suggest*p.rate}))
+    .sort((a,b)=> a.abc!==b.abc ? (a.abc<b.abc?-1:1)
+                                : ((valueMode ? b.cost-a.cost : b.suggest-a.suggest) || a.product.localeCompare(b.product)) );
+  const reorderCost=reorder.reduce((s,p)=>s+p.cost,0);
+  const reorderUnits=reorder.reduce((s,p)=>s+p.suggest,0);
+
+  // ── 5. excess & obsolete ──
+  const eo=P.filter(p=>p.onHand>0 && (p.age==null || p.age>=dorm)).sort((a,b)=>b.value-a.value||b.onHand-a.onHand);
+  const eoValue=eo.reduce((s,p)=>s+p.value,0);
+  const eoUnits=eo.reduce((s,p)=>s+p.onHand,0);
+
+  // ── 6. damage / shrinkage ──
+  const dmgList=P.filter(p=>p.damage>0).map(p=>({...p, dmgRate:rShare(p.damage,p.onHand+p.damage)}))
+    .sort((a,b)=>b.damageValue-a.damageValue||b.damage-a.damage);
+
+  // ── 7. stock-count aging (inventory record freshness) ──
+  // Half-open buckets [lo, hi) built from the 7 / 30 day marks capped at the
+  // dormant threshold, so the final bucket is always exactly the dormant rule —
+  // whatever the user sets it to (a hard-coded "31 – 89" would read "31 – 29"
+  // the moment dormant drops below 31).
+  const cuts=[...new Set([7,30].filter(x=>x<dorm).concat(dorm))].sort((a,b)=>a-b);
+  const bucketDefs=[]; let lo=0;
+  cuts.forEach(c=>{
+    const label = (c-1>lo) ? `${lo} – ${c-1} days` : `${lo} day${lo===1?'':'s'}`;
+    const a0=lo, a1=c;
+    bucketDefs.push({label, test:a=>a!=null&&a>=a0&&a<a1});
+    lo=c;
+  });
+  bucketDefs.push({label:lo+'+ days', test:a=>a!=null&&a>=lo});
+  bucketDefs.push({label:'Never counted', test:a=>a==null});
+  const ageRows=bucketDefs.map(b=>{
+    const g=P.filter(p=>b.test(p.age));
+    return {label:b.label, skus:g.length, share:rShare(g.length,P.length),
+            units:g.reduce((s,p)=>s+p.onHand,0), value:g.reduce((s,p)=>s+p.value,0)};
+  });
+  const counted=P.filter(p=>p.age!=null);
+  const compliance=rShare(P.filter(p=>p.age!=null&&p.age<dorm).length, P.length);
+  const avgAge=counted.length?Math.round(counted.reduce((s,p)=>s+p.age,0)/counted.length):null;
+
+  // ── 8. channel pricing ──
+  const both=P.filter(p=>p.amz!=null&&p.flp!=null).map(p=>{
+    const gap=p.amz-p.flp;
+    return {...p, gap, gapPct:rShare(Math.abs(gap), Math.min(p.amz,p.flp))*(gap<0?-1:1)};
+  });
+  const price={
+    both:both.length,
+    amzOnly:P.filter(p=>p.amz!=null&&p.flp==null).length,
+    flpOnly:P.filter(p=>p.amz==null&&p.flp!=null).length,
+    none:P.filter(p=>p.amz==null&&p.flp==null).length,
+    amzHigher:both.filter(p=>p.gap>0).length,
+    flpHigher:both.filter(p=>p.gap<0).length,
+    parity:both.filter(p=>p.gap===0).length,
+    avgGapPct: both.length ? both.reduce((s,p)=>s+Math.abs(p.gapPct),0)/both.length : 0,
+    top: both.filter(p=>p.gap!==0).sort((a,b)=>Math.abs(b.gapPct)-Math.abs(a.gapPct)).slice(0,10)
+  };
+
+  // ── 9. GST slab exposure ──
+  const slabKeys=[...new Set(P.filter(p=>p.gst!=null).map(p=>p.gst))].sort((a,b)=>a-b);
+  const gstRows=slabKeys.map(r=>{
+    const g=P.filter(p=>p.gst===r);
+    const v=g.reduce((s,p)=>s+p.value,0);
+    return {rate:r, skus:g.length, units:g.reduce((s,p)=>s+p.onHand,0), value:v, tax:v*r/(100+r)};
+  });
+  const noGst=P.filter(p=>p.gst==null);
+  if(noGst.length) gstRows.push({rate:null, skus:noGst.length, units:noGst.reduce((s,p)=>s+p.onHand,0), value:noGst.reduce((s,p)=>s+p.value,0), tax:0});
+
+  // ── 10. data quality ──
+  const qDefs=[
+    {label:'Category',            ok:p=>p.category&&p.category!=='Uncategorised'},
+    {label:'HSN code',            ok:p=>!!p.hsn},
+    {label:'GST rate',            ok:p=>p.gst!=null},
+    {label:'Marketplace rate',    ok:p=>p.rate>0},
+    {label:'Both channel rates',  ok:p=>p.amz!=null&&p.flp!=null},
+    {label:'Star rating',         ok:p=>p.rating!=null},
+    {label:'Stock counted',       ok:p=>p.age!=null},
+    {label:'Counted within '+dorm+'d', ok:p=>p.age!=null&&p.age<dorm}
+  ];
+  const quality=qDefs.map(q=>{
+    const ok=P.filter(q.ok).length;
+    return {label:q.label, ok, missing:P.length-ok, pct:rShare(ok,P.length)};
+  });
+  const qualityScore=quality.length?quality.reduce((s,q)=>s+q.pct,0)/quality.length:0;
+
+  // ── executive findings ──
+  const F=[];
+  if(!valueMode)       F.push({t:'bad',  m:`No Amazon or Flipkart rate is recorded against any SKU, so stock cannot be valued in rupees. Every ₹ figure in this report is shown as "—" and the ABC split falls back to units on hand. Fill in the marketplace rates to unlock value analytics.`});
+  if(tot.out)          F.push({t:'bad',  m:`${num(tot.out)} of ${num(tot.skus)} SKUs (${rPct(tot.stockoutRate)}) are out of stock — in-stock rate ${rPct(tot.fillRate)} against a 95% target.`});
+  if(reorder.length)   F.push({t:'bad',  m:`${num(reorder.length)} SKUs are at or below the reorder point; bringing them to max cover needs ${num(reorderUnits)} units${valueMode?` ≈ ${rMoney(reorderCost)}`:''}.`});
+  const aOut=abcRows[0].out;
+  if(aOut)             F.push({t:'bad',  m:`${num(aOut)} Class A SKUs are out of stock — clear these first, they carry the largest share of ${metricLbl}.`});
+  if(eo.length)        F.push({t:'warn', m:`${num(eo.length)} SKUs holding ${num(eoUnits)} units${valueMode?` (${rMoney(eoValue)}, ${rPct(rShare(eoValue,tot.value))} of stock value)`:''} show no movement for ${dorm}+ days — excess / obsolete candidates.`});
+  if(tot.damage)       F.push({t:tot.shrinkage>2?'bad':'warn', m:`Damage stands at ${num(tot.damage)} units (${rPct(tot.shrinkage)} of holdings${valueMode?`, ${rMoney(tot.damageValue)}`:''}) across ${num(dmgList.length)} SKUs.`});
+  if(compliance<95)    F.push({t:compliance<80?'bad':'warn', m:`Only ${rPct(compliance)} of SKUs were counted within the last ${dorm} days — cycle-count discipline is below the 95% target.`});
+  if(valueMode && tot.unpriced) F.push({t:'warn', m:`${num(tot.unpriced)} SKUs carry no marketplace rate, so their stock is valued at ₹0 — true inventory value is higher than shown.`});
+  if(tot.packedPct<50 && tot.onHand) F.push({t:'warn', m:`Only ${rPct(tot.packedPct)} of on-hand units are packed and ship-ready; the rest needs packing before dispatch.`});
+  if(qualityScore<80)  F.push({t:'warn', m:`Master-data completeness is ${rPct(qualityScore)} — missing HSN, GST and rate fields limit how much of this analysis is usable.`});
+  if(abcRows[0].skus)  F.push({t:'info', m:`Class A is ${num(abcRows[0].skus)} SKUs (${rPct(abcRows[0].skuPct)} of the catalogue) but ${rPct(abcRows[0].pct)} of stock ${metricLbl} — count these most often.`});
+  if(!F.length)        F.push({t:'ok',   m:'No stockouts, no dormant stock and no damage in this selection — inventory is healthy.'});
+
+  return {
+    label: cat==='all'?'All Categories':cat,
+    basis, basisLabel:REP_BASIS[basis]||basis, rop, dorm, maxCover,
+    valueMode, metricLbl,
+    P, tot, health:HEALTH, abcRows, topValue, catRows,
+    reorder, reorderCost, reorderUnits,
+    eo, eoValue, eoUnits, eoPct:rShare(eoValue,tot.value),
+    dmgList, ageRows, compliance, avgAge, price, gstRows, quality, qualityScore,
+    findings:F,
+    generatedAt:new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:true})
+  };
+}
+
+// ── on-screen rendering ──
+const REP_LIST_CAP = 50;   // long action lists are capped on screen; CSV carries every row
+
+function repTable(head, bodyRows, foot, scroll){
+  const t=`<table class="rep-table"><thead><tr>${head}</tr></thead><tbody>${bodyRows}</tbody>${foot?`<tfoot><tr>${foot}</tr></tfoot>`:''}</table>`;
+  return scroll ? `<div class="rep-scroll">${t}</div>` : t;
+}
+function repTitle(icon, text, color){
+  return `<div class="rep-section-title"${color?` style="color:${color}"`:''}><i class="ti ${icon}"></i> ${text}</div>`;
+}
+function clsPill(c){ return `<span class="rep-cls ${c.toLowerCase()}">${c}</span>`; }
+function capNote(shown, total, what){
+  return shown<total ? `<div class="rep-note">Showing the top ${num(shown)} of ${num(total)} ${what} — the CSV download carries every row.</div>` : '';
 }
 
 function generateReport(){
   const d=reportData();
   lastReport=d;
   const out=document.getElementById('reportOutput');
-  if(!d.tot.count){
+  if(!d.tot.skus){
     out.innerHTML=`<div class="rep-empty"><i class="ti ti-inbox"></i>No stock items in this selection.</div>`;
     out.style.display='block';
     document.getElementById('reportActions').style.display='none';
     return;
   }
-  const catTable=`<table class="rep-table"><thead><tr><th>Category</th><th class="num">Products</th><th class="num">Packed</th><th class="num">Loose</th><th class="num">Damage</th><th class="num">Out</th></tr></thead><tbody>`
-    + d.catRows.map(r=>`<tr><td>${esc(r.cat)}</td><td class="num">${num(r.count)}</td><td class="num">${num(r.packed)}</td><td class="num">${num(r.loose)}</td><td class="num">${num(r.damage)}</td><td class="num">${num(r.out)}</td></tr>`).join('')
-    + `</tbody><tfoot><tr><td>Total</td><td class="num">${num(d.tot.count)}</td><td class="num">${num(d.tot.packed)}</td><td class="num">${num(d.tot.loose)}</td><td class="num">${num(d.tot.damage)}</td><td class="num">${num(d.tot.out)}</td></tr></tfoot></table>`;
-  const outTable = d.outList.length
-    ? `<table class="rep-table"><thead><tr><th>Category</th><th>Product</th><th class="num">Damage</th></tr></thead><tbody>`
-      + d.outList.map(e=>`<tr><td style="color:var(--text2)">${esc(e.category||'—')}</td><td>${esc(e.product)}</td><td class="num ${(+e.damage||0)>0?'stk-damage':''}">${num(+e.damage||0)}</td></tr>`).join('')
-      + `</tbody></table>`
-    : `<div class="rep-empty" style="padding:10px 0">None — every product has stock. 🎉</div>`;
-  out.innerHTML=`
-    <div class="rep-summary">
-      <div class="rep-card"><div class="lbl">Products</div><div class="val" style="color:var(--cyan)">${num(d.tot.count)}</div></div>
-      <div class="rep-card"><div class="lbl">Packed</div><div class="val" style="color:var(--success-text)">${num(d.tot.packed)}</div></div>
-      <div class="rep-card"><div class="lbl">Loose</div><div class="val" style="color:var(--amber)">${num(d.tot.loose)}</div></div>
-      <div class="rep-card"><div class="lbl">Damage</div><div class="val" style="color:var(--danger-text)">${num(d.tot.damage)}</div></div>
+  const t=d.tot;
+  const V=n=>d.valueMode?rMoney(n):'—';   // ₹ figures collapse to "—" when nothing is priced
+
+  const kpis=`<div class="rep-summary">
+    <div class="rep-card"><div class="lbl">SKUs tracked</div><div class="val" style="color:var(--cyan)">${num(t.skus)}</div><div class="sub">${num(t.inStock)} in stock · ${num(t.out)} out</div></div>
+    <div class="rep-card"><div class="lbl">Units on hand</div><div class="val">${num(t.onHand)}</div><div class="sub">${num(t.packed)} packed · ${num(t.loose)} loose</div></div>
+    <div class="rep-card"><div class="lbl">Stock value</div><div class="val" style="color:${d.valueMode?'var(--success-text)':'var(--text3)'}">${V(t.value)}</div><div class="sub">${d.valueMode?esc(d.basisLabel):'no marketplace rates recorded'}</div></div>
+    <div class="rep-card"><div class="lbl">In-stock rate</div><div class="val" style="color:${t.fillRate>=95?'var(--success-text)':(t.fillRate>=85?'var(--amber)':'var(--danger-text)')}">${rPct(t.fillRate)}</div><div class="sub">target 95%+</div></div>
+    <div class="rep-card"><div class="lbl">Needs reorder</div><div class="val" style="color:${d.reorder.length?'var(--danger-text)':'var(--success-text)'}">${num(d.reorder.length)}</div><div class="sub">${num(d.reorderUnits)} units${d.valueMode?' · '+rMoney(d.reorderCost):''} to max cover</div></div>
+    <div class="rep-card"><div class="lbl">Damage / shrinkage</div><div class="val" style="color:var(--danger-text)">${num(t.damage)}</div><div class="sub">${rPct(t.shrinkage)} of holdings${d.valueMode?' · '+rMoney(t.damageValue):''}</div></div>
+    <div class="rep-card"><div class="lbl">Excess / dormant</div><div class="val" style="color:var(--amber)">${d.valueMode?rMoney(d.eoValue):num(d.eoUnits)}</div><div class="sub">${num(d.eo.length)} SKUs${d.valueMode?' · '+rPct(d.eoPct)+' of value':' · units idle'}</div></div>
+    <div class="rep-card"><div class="lbl">Count compliance</div><div class="val" style="color:${d.compliance>=95?'var(--success-text)':(d.compliance>=80?'var(--amber)':'var(--danger-text)')}">${rPct(d.compliance)}</div><div class="sub">counted ≤${d.dorm}d · avg age ${d.avgAge==null?'—':d.avgAge+'d'}</div></div>
+  </div>
+  ${d.valueMode?'':`<div class="rep-note" style="border:1px solid var(--warning-border);background:var(--warning-bg);color:var(--warning-text);border-radius:var(--radius);padding:9px 11px;margin:10px 0 0"><b>Quantity basis.</b> No Amazon or Flipkart rate is recorded against any SKU in this selection, so stock cannot be valued. All ₹ columns show &ldquo;—&rdquo; and the ABC split is computed on units on hand instead of value.</div>`}`;
+
+  const meta=`<div class="rep-meta">
+    <span><b>Selection:</b> ${esc(d.label)}</span>
+    <span><b>Valuation:</b> ${esc(d.basisLabel)}</span>
+    <span><b>Reorder point:</b> ${num(d.rop)} units (max cover ${num(d.maxCover)})</span>
+    <span><b>Dormant after:</b> ${num(d.dorm)} days</span>
+    <span><b>Generated:</b> ${esc(d.generatedAt)}</span>
+  </div>`;
+
+  const findings=`${repTitle('ti-bulb','Key findings')}
+    <table class="rep-table"><tbody>${d.findings.map(f=>
+      `<tr><td style="width:78px"><span class="rep-flag ${f.t==='info'?'':f.t}">${f.t==='bad'?'ACTION':(f.t==='warn'?'REVIEW':(f.t==='ok'?'GOOD':'NOTE'))}</span></td><td>${esc(f.m)}</td></tr>`).join('')}</tbody></table>`;
+
+  const health=`${repTitle('ti-heartbeat','Stock health')}
+    <div class="rep-note">Each SKU falls in exactly one band, most urgent first. Reorder point ${num(d.rop)} units; dormant after ${num(d.dorm)} days without a stock movement.</div>
+    ${repTable(
+      `<th>Band</th><th class="num">SKUs</th><th class="num">Share</th><th style="width:110px"></th><th class="num">Units</th><th class="num">Value</th>`,
+      d.health.map(h=>`<tr><td>${esc(h.label)}<div class="rep-note" style="margin:2px 0 0">${h.hint}</div></td><td class="num">${num(h.skus)}</td><td class="num">${rPct(h.share)}</td><td>${rBar(h.share,h.cls)}</td><td class="num">${num(h.units)}</td><td class="num">${V(h.value)}</td></tr>`).join(''),
+      `<td>Total</td><td class="num">${num(t.skus)}</td><td class="num">100.0%</td><td></td><td class="num">${num(t.onHand)}</td><td class="num">${V(t.value)}</td>`
+    )}`;
+
+  const abc=`${repTitle('ti-chart-arcs',`ABC analysis (Pareto by stock ${d.metricLbl})`)}
+    <div class="rep-note">Class A = SKUs making up the first 80% of stock ${d.metricLbl}, B = next 15%, C = the tail. This sheet holds no sales history, so the classification is on <b>${d.valueMode?'value on hand':'units on hand (no rates recorded)'}</b>, not annual usage value. Count A monthly, B quarterly, C twice a year.</div>
+    ${repTable(
+      `<th>Class</th><th class="num">SKUs</th><th class="num">% of SKUs</th><th class="num">Units</th><th class="num">Value</th><th class="num">% of ${d.metricLbl}</th><th class="num">Out of stock</th>`,
+      d.abcRows.map(r=>`<tr><td>${clsPill(r.cls)} ${r.cls==='A'?'High value':(r.cls==='B'?'Medium':'Low / tail')}</td><td class="num">${num(r.skus)}</td><td class="num">${rPct(r.skuPct)}</td><td class="num">${num(r.units)}</td><td class="num">${V(r.value)}</td><td class="num">${rPct(r.pct)}</td><td class="num ${r.out?'stk-damage':''}">${num(r.out)}</td></tr>`).join(''),
+      `<td>Total</td><td class="num">${num(t.skus)}</td><td class="num">100.0%</td><td class="num">${num(t.onHand)}</td><td class="num">${V(t.value)}</td><td class="num">100.0%</td><td class="num">${num(t.out)}</td>`
+    )}
+    ${d.topValue.length?`${repTitle('ti-trophy',`Top SKUs by stock ${d.metricLbl}`)}
+    ${repTable(
+      `<th>#</th><th>Product</th><th class="num">On hand</th><th class="num">Rate</th><th class="num">Value</th><th class="num">Cumulative</th><th>Class</th>`,
+      d.topValue.map((p,i)=>`<tr><td>${i+1}</td><td class="rep-prod" title="${esc(p.product)}">${esc(p.product)}</td><td class="num">${num(p.onHand)}</td><td class="num">${V(p.rate)}</td><td class="num">${V(p.value)}</td><td class="num">${rPct(p.cumPct)}</td><td>${clsPill(p.abc)}</td></tr>`).join(''),
+      '', true)}`:''}`;
+
+  const catTbl=`${repTitle('ti-category','Category performance matrix')}
+    ${repTable(
+      `<th>Category</th><th class="num">SKUs</th><th class="num">On hand</th><th class="num">Packed %</th><th class="num">Value</th><th class="num">% of value</th><th class="num">In-stock %</th><th class="num">Damage %</th><th class="num">Avg age</th>`,
+      d.catRows.map(r=>`<tr>
+        <td>${esc(r.cat)}</td>
+        <td class="num">${num(r.skus)}</td>
+        <td class="num">${num(r.onHand)}</td>
+        <td class="num">${rPct(r.packedPct)}</td>
+        <td class="num">${V(r.value)}</td>
+        <td class="num">${d.valueMode?rPct(r.valPct):'—'}</td>
+        <td class="num" style="color:${r.fill>=95?'var(--success-text)':(r.fill>=85?'var(--amber)':'var(--danger-text)')}">${rPct(r.fill)}</td>
+        <td class="num" style="color:${r.dmgRate>2?'var(--danger-text)':'inherit'}">${rPct(r.dmgRate)}</td>
+        <td class="num">${r.avgAge==null?'—':r.avgAge+'d'}</td></tr>`).join(''),
+      `<td>Total</td><td class="num">${num(t.skus)}</td><td class="num">${num(t.onHand)}</td><td class="num">${rPct(t.packedPct)}</td><td class="num">${V(t.value)}</td><td class="num">${d.valueMode?'100.0%':'—'}</td><td class="num">${rPct(t.fillRate)}</td><td class="num">${rPct(t.shrinkage)}</td><td class="num">${d.avgAge==null?'—':d.avgAge+'d'}</td>`,
+      true)}`;
+
+  const roShown=d.reorder.slice(0,REP_LIST_CAP);
+  const reorderSec=`${repTitle('ti-shopping-cart-plus',`Replenishment list (${d.reorder.length})`, d.reorder.length?'var(--danger-text)':'')}
+    <div class="rep-note">Min/max rule: any SKU at or below <b>${num(d.rop)}</b> units is reordered up to a max cover of <b>${num(d.maxCover)}</b> units. Sorted by ABC class, then by ${d.valueMode?'order value':'order quantity'}. ${d.valueMode?`Estimated value uses the ${esc(d.basisLabel).toLowerCase()} — a listed-price estimate, not a purchase cost.`:'No rates are recorded, so no order value can be estimated.'}</div>
+    ${d.reorder.length?`${repTable(
+      `<th>Class</th><th>Product</th><th>Category</th><th class="num">Packed</th><th class="num">Loose</th><th class="num">On hand</th><th class="num">Order qty</th><th class="num">Est. value</th><th class="num">Idle</th>`,
+      roShown.map(p=>`<tr><td>${clsPill(p.abc)}</td><td class="rep-prod" title="${esc(p.product)}">${esc(p.product)}</td><td style="color:var(--text2)">${esc(p.category)}</td><td class="num">${num(p.packed)}</td><td class="num">${num(p.loose)}</td><td class="num ${p.onHand<=0?'stk-damage':''}">${num(p.onHand)}</td><td class="num">${num(p.suggest)}</td><td class="num">${V(p.cost)}</td><td class="num">${p.age==null?'—':p.age+'d'}</td></tr>`).join(''),
+      `<td colspan="6">Total (${num(d.reorder.length)} SKUs)</td><td class="num">${num(d.reorderUnits)}</td><td class="num">${V(d.reorderCost)}</td><td></td>`,
+      true)}
+    ${capNote(roShown.length, d.reorder.length, 'SKUs')}`:`<div class="rep-empty" style="padding:10px 0">Nothing at or below the reorder point. \u{1F389}</div>`}`;
+
+  const eoShown=d.eo.slice(0,REP_LIST_CAP);
+  const eoSec=`${repTitle('ti-clock-pause',`Excess & obsolete — no movement in ${d.dorm}+ days (${d.eo.length})`, d.eo.length?'var(--amber)':'')}
+    <div class="rep-note">Stock still on hand whose last recorded movement is at least ${num(d.dorm)} days old (or never stamped). ${d.eo.length?`That is <b>${num(d.eoUnits)} units</b>${d.valueMode?` worth ${rMoney(d.eoValue)} — ${rPct(d.eoPct)} of stock value`:''} sitting idle. Review for markdown, bundling or write-off.`:''}</div>
+    ${d.eo.length?`${repTable(
+      `<th>Product</th><th>Category</th><th class="num">On hand</th><th class="num">Value</th><th class="num">Days idle</th><th>Last movement</th>`,
+      eoShown.map(p=>`<tr><td class="rep-prod" title="${esc(p.product)}">${esc(p.product)}</td><td style="color:var(--text2)">${esc(p.category)}</td><td class="num">${num(p.onHand)}</td><td class="num">${V(p.value)}</td><td class="num">${p.age==null?'<span class="rep-flag bad">never</span>':p.age}</td><td style="color:var(--text2)">${esc(p.updated||'—')}</td></tr>`).join(''),
+      `<td colspan="2">Total (${num(d.eo.length)} SKUs)</td><td class="num">${num(d.eoUnits)}</td><td class="num">${V(d.eoValue)}</td><td colspan="2"></td>`,
+      true)}
+    ${capNote(eoShown.length, d.eo.length, 'SKUs')}`:`<div class="rep-empty" style="padding:10px 0">No dormant stock — everything has moved recently.</div>`}`;
+
+  const dmgShown=d.dmgList.slice(0,REP_LIST_CAP);
+  const dmgSec=`${repTitle('ti-alert-triangle',`Damage & shrinkage (${d.dmgList.length} SKUs)`, d.dmgList.length?'var(--danger-text)':'')}
+    <div class="rep-note">Shrinkage rate = damaged units ÷ (on hand + damaged). Anything above 2% on a SKU is flagged for a root-cause check on handling, packing or the courier.</div>
+    ${d.dmgList.length?`${repTable(
+      `<th>Product</th><th>Category</th><th class="num">On hand</th><th class="num">Damaged</th><th class="num">Rate</th><th class="num">Value lost</th><th></th>`,
+      dmgShown.map(p=>`<tr><td class="rep-prod" title="${esc(p.product)}">${esc(p.product)}</td><td style="color:var(--text2)">${esc(p.category)}</td><td class="num">${num(p.onHand)}</td><td class="num stk-damage">${num(p.damage)}</td><td class="num">${rPct(p.dmgRate)}</td><td class="num">${V(p.damageValue)}</td><td>${p.dmgRate>10?'<span class="rep-flag bad">critical</span>':(p.dmgRate>2?'<span class="rep-flag warn">high</span>':'')}</td></tr>`).join(''),
+      `<td colspan="2">Total</td><td class="num">${num(t.onHand)}</td><td class="num">${num(t.damage)}</td><td class="num">${rPct(t.shrinkage)}</td><td class="num">${V(t.damageValue)}</td><td></td>`,
+      true)}
+    ${capNote(dmgShown.length, d.dmgList.length, 'SKUs')}`:`<div class="rep-empty" style="padding:10px 0">No damaged stock recorded. \u{1F389}</div>`}`;
+
+  const ageSec=`${repTitle('ti-calendar-stats','Stock-count aging & cycle-count compliance')}
+    <div class="rep-note">Age of the last recorded stock movement per SKU — the inventory-record-accuracy proxy available here. ${rPct(d.compliance)} of SKUs were touched within ${num(d.dorm)} days; the usual cycle-count target is 95%+.</div>
+    ${repTable(
+      `<th>Last movement</th><th class="num">SKUs</th><th class="num">Share</th><th style="width:110px"></th><th class="num">Units</th><th class="num">Value</th>`,
+      d.ageRows.map((r,i)=>`<tr><td>${esc(r.label)}</td><td class="num">${num(r.skus)}</td><td class="num">${rPct(r.share)}</td><td>${rBar(r.share, i>=d.ageRows.length-2?'bad':(i===0?'good':''))}</td><td class="num">${num(r.units)}</td><td class="num">${V(r.value)}</td></tr>`).join(''),
+      `<td>Total</td><td class="num">${num(t.skus)}</td><td class="num">100.0%</td><td></td><td class="num">${num(t.onHand)}</td><td class="num">${V(t.value)}</td>`
+    )}`;
+
+  const p=d.price;
+  const priceSec=`${repTitle('ti-arrows-diff','Channel price positioning (Amazon vs Flipkart)')}
+    <div class="rep-note">Compares each SKU's average listed rate across the two marketplaces. Gap % is measured against the lower of the two.</div>
+    <div class="rep-summary six" style="margin-bottom:10px">
+      <div class="rep-card"><div class="lbl">Priced on both</div><div class="val">${num(p.both)}</div><div class="sub">of ${num(t.skus)} SKUs</div></div>
+      <div class="rep-card"><div class="lbl">Dearer on Amazon</div><div class="val" style="color:#ff9900">${num(p.amzHigher)}</div><div class="sub">${num(p.parity)} at parity</div></div>
+      <div class="rep-card"><div class="lbl">Dearer on Flipkart</div><div class="val" style="color:#2874f0">${num(p.flpHigher)}</div><div class="sub">avg gap ${rPct(p.avgGapPct)}</div></div>
+      <div class="rep-card"><div class="lbl">Amazon only</div><div class="val">${num(p.amzOnly)}</div><div class="sub">no Flipkart rate</div></div>
+      <div class="rep-card"><div class="lbl">Flipkart only</div><div class="val">${num(p.flpOnly)}</div><div class="sub">no Amazon rate</div></div>
+      <div class="rep-card"><div class="lbl">No rate at all</div><div class="val" style="color:${p.none?'var(--danger-text)':'var(--success-text)'}">${num(p.none)}</div><div class="sub">valued at ₹0</div></div>
     </div>
-    <div class="rep-section-title"><i class="ti ti-category"></i> Stock by Category</div>
-    ${catTable}
-    <div class="rep-section-title" style="color:var(--danger-text)"><i class="ti ti-alert-triangle"></i> Out of Stock (${d.outList.length})</div>
-    ${outTable}`;
+    ${p.top.length?repTable(
+      `<th>Product</th><th class="num">Amazon</th><th class="num">Flipkart</th><th class="num">Gap</th><th class="num">Gap %</th><th>Dearer on</th>`,
+      p.top.map(x=>`<tr><td class="rep-prod" title="${esc(x.product)}">${esc(x.product)}</td><td class="num">${rMoney(x.amz)}</td><td class="num">${rMoney(x.flp)}</td><td class="num">${rMoney(Math.abs(x.gap))}</td><td class="num">${rPct(Math.abs(x.gapPct))}</td><td>${x.gap>0?'<span class="mkt-name amazon">Amazon</span>':'<span class="mkt-name flipkart">Flipkart</span>'}</td></tr>`).join(''),
+      '', true):`<div class="rep-empty" style="padding:10px 0">No SKU is priced on both channels.</div>`}`;
+
+  const gstSec=`${repTitle('ti-receipt-tax','GST slab exposure')}
+    <div class="rep-note">Stock value split by GST slab. The tax component assumes the listed marketplace rates are <b>GST-inclusive</b> (value × r ÷ (100 + r)) — it is an exposure indicator for the stock you hold, not a return figure.</div>
+    ${d.gstRows.length?repTable(
+      `<th>GST slab</th><th class="num">SKUs</th><th class="num">Units</th><th class="num">Stock value</th><th class="num">Tax component</th><th class="num">% of value</th>`,
+      d.gstRows.map(r=>`<tr><td>${r.rate==null?'<span class="rep-flag warn">Not set</span>':esc(r.rate)+'%'}</td><td class="num">${num(r.skus)}</td><td class="num">${num(r.units)}</td><td class="num">${V(r.value)}</td><td class="num">${r.rate==null?'—':V(r.tax)}</td><td class="num">${d.valueMode?rPct(rShare(r.value,t.value)):'—'}</td></tr>`).join(''),
+      `<td>Total</td><td class="num">${num(t.skus)}</td><td class="num">${num(t.onHand)}</td><td class="num">${V(t.value)}</td><td class="num">${V(d.gstRows.reduce((s,r)=>s+r.tax,0))}</td><td class="num">${d.valueMode?'100.0%':'—'}</td>`
+    ):`<div class="rep-empty" style="padding:10px 0">No GST rates recorded.</div>`}`;
+
+  const qSec=`${repTitle('ti-database-check',`Data quality scorecard — ${rPct(d.qualityScore)} complete`)}
+    <div class="rep-note">Every gap below weakens the numbers above: a missing rate zeroes that SKU's value, a missing count date makes it look dormant.</div>
+    ${repTable(
+      `<th>Field</th><th class="num">Complete</th><th class="num">Missing</th><th class="num">%</th><th style="width:110px"></th>`,
+      d.quality.map(q=>`<tr><td>${esc(q.label)}</td><td class="num">${num(q.ok)}</td><td class="num ${q.missing?'stk-damage':''}">${num(q.missing)}</td><td class="num">${rPct(q.pct)}</td><td>${rBar(q.pct, q.pct>=95?'good':(q.pct>=70?'warn':'bad'))}</td></tr>`).join('')
+    )}`;
+
+  out.innerHTML = meta + kpis + findings + health + abc + catTbl + reorderSec + eoSec + dmgSec + ageSec + priceSec + gstSec + qSec;
   out.style.display='block';
   document.getElementById('reportActions').style.display='flex';
 }
 
+// ── print / PDF ──
 function printReport(){
   if(!lastReport){ showToast('Generate a report first','error'); return; }
-  const d=lastReport;
-  const genAt=new Date().toLocaleString('en-US',{day:'2-digit',month:'short',year:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:true});
-  const catRows=d.catRows.map(r=>`<tr><td>${esc(r.cat)}</td><td class="r">${num(r.count)}</td><td class="r">${num(r.packed)}</td><td class="r">${num(r.loose)}</td><td class="r">${num(r.damage)}</td><td class="r">${num(r.out)}</td></tr>`).join('');
-  const outRows=d.outList.length? d.outList.map(e=>`<tr><td>${esc(e.category||'—')}</td><td>${esc(e.product)}</td><td class="r">${num(+e.damage||0)}</td></tr>`).join('') : `<tr><td colspan="3" style="text-align:center;color:#777">None — every product has stock.</td></tr>`;
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>IBI Stock Report — ${esc(d.label)}</title>
+  const d=lastReport, t=d.tot;
+  const R=(n)=> d.valueMode ? '₹'+Math.round(Number(n)||0).toLocaleString('en-IN') : '—';
+  const bar=(p,c)=>`<span class="pbar"><span style="width:${Math.max(0,Math.min(100,p))}%;background:${c||'#00a0cc'}"></span></span>`;
+  const cap=(list,n,what)=> list.length>n ? `<div class="note">Showing the top ${n} of ${list.length} ${what}; the CSV download carries every row.</div>` : '';
+  const N=REP_LIST_CAP;
+
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>IBI Stock &amp; Inventory Analysis — ${esc(d.label)}</title>
   <style>
     *{box-sizing:border-box}
-    body{font-family:'Roboto','Segoe UI',Arial,sans-serif;color:#111;margin:26px;font-size:13px}
+    body{font-family:'Roboto','Segoe UI',Arial,sans-serif;color:#111;margin:22px;font-size:12px}
     h1{font-size:19px;margin:0;color:#0086ad}
-    h2{font-size:14px;margin:2px 0;font-weight:600}
-    h3{font-size:14px;margin:16px 0 6px}
-    .muted{color:#666;font-size:12px}
+    h2{font-size:13px;margin:2px 0;font-weight:600}
+    h3{font-size:12.5px;margin:16px 0 4px;text-transform:uppercase;letter-spacing:.05em;color:#0086ad;border-bottom:1px solid #cfe6ee;padding-bottom:3px}
+    .muted{color:#666;font-size:11px}
     .head{border-bottom:2px solid #00c5ff;padding-bottom:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px}
     .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:48px;height:48px;border-radius:50%;border:3px solid #00c5ff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0086ad;font-size:15px;letter-spacing:1px;flex-shrink:0}
-    .cards{display:flex;gap:10px;margin:14px 0}
-    .card{flex:1;border:1px solid #ddd;border-radius:8px;padding:10px;text-align:center}
-    .card .l{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#666}
-    .card .v{font-size:17px;font-weight:700;margin-top:4px}
+    .logo{width:46px;height:46px;border-radius:50%;border:3px solid #00c5ff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0086ad;font-size:14px;letter-spacing:1px;flex-shrink:0}
+    .meta{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:10.5px;color:#555;margin:8px 0 12px;padding-bottom:8px;border-bottom:1px solid #eee}
+    .meta b{color:#222}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 4px}
+    .card{border:1px solid #ddd;border-radius:7px;padding:8px;text-align:center}
+    .card .l{font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:#666}
+    .card .v{font-size:15px;font-weight:700;margin-top:3px}
+    .card .s{font-size:9px;color:#888;margin-top:2px}
     table{width:100%;border-collapse:collapse;margin-bottom:4px}
-    th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;font-size:12px;vertical-align:top}
-    th{background:#f2f6f8}
+    th,td{border:1px solid #ddd;padding:4px 6px;text-align:left;font-size:10.5px;vertical-align:top}
+    th{background:#f2f6f8;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em}
     td.r,th.r{text-align:right;white-space:nowrap}
     tfoot td{font-weight:700;background:#fafafa}
-    .foot{margin-top:24px;border-top:1px solid #ddd;padding-top:8px;color:#666;font-size:11px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
-    @media print{ body{margin:12mm} }
+    .note{font-size:10px;color:#666;margin:2px 0 6px;line-height:1.4}
+    .pbar{display:inline-block;width:80px;height:5px;background:#eee;border-radius:3px;overflow:hidden;vertical-align:middle}
+    .pbar span{display:block;height:100%;border-radius:3px}
+    .flag{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;background:#fdeaea;color:#8b1a1a}
+    .flag.warn{background:#fef6e4;color:#7a4a00}
+    .flag.ok{background:#e6f7e6;color:#1a6b1a}
+    .flag.info{background:#e4f0fd;color:#0c447c}
+    .cls{display:inline-block;width:15px;text-align:center;font-weight:700;border-radius:3px;background:#eee}
+    .cls.A{background:#e6f7e6;color:#1a6b1a}.cls.B{background:#e4f0fd;color:#0c447c}
+    .sec{page-break-inside:avoid}
+    .foot{margin-top:20px;border-top:1px solid #ddd;padding-top:8px;color:#666;font-size:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+    @media print{ body{margin:10mm} h3{page-break-after:avoid} }
   </style></head><body>
     <div class="head">
-      <div class="brand"><div class="logo">IBI</div><div><h1>India Business International</h1><h2>Stock &amp; Inventory Availability Report</h2><div class="muted">Stock &amp; Inventory — Kanyakumari</div></div></div>
-      <div style="text-align:right"><div style="font-size:16px;font-weight:700">${esc(d.label)}</div><div class="muted">${num(d.tot.count)} product(s)</div></div>
+      <div class="brand"><div class="logo">IBI</div><div><h1>India Business International</h1><h2>Stock &amp; Inventory Analysis Report</h2><div class="muted">Stock &amp; Inventory — Kanyakumari</div></div></div>
+      <div style="text-align:right"><div style="font-size:15px;font-weight:700">${esc(d.label)}</div><div class="muted">${num(t.skus)} SKU(s) · ${num(t.onHand)} units</div></div>
     </div>
+    <div class="meta">
+      <span><b>Valuation:</b> ${esc(d.basisLabel)}</span>
+      <span><b>Reorder point:</b> ${num(d.rop)} units (max cover ${num(d.maxCover)})</span>
+      <span><b>Dormant after:</b> ${num(d.dorm)} days</span>
+      <span><b>Generated:</b> ${esc(d.generatedAt)}</span>
+    </div>
+    ${d.valueMode?'':`<div class="note" style="border:1px solid #ffd080;background:#fef6e4;color:#7a4a00;border-radius:6px;padding:7px 9px;margin-bottom:10px"><b>Quantity basis.</b> No Amazon or Flipkart rate is recorded against any SKU in this selection, so stock cannot be valued. All ₹ columns show &ldquo;—&rdquo; and the ABC split is computed on units on hand instead of value.</div>`}
+
     <div class="cards">
-      <div class="card"><div class="l">Products</div><div class="v" style="color:#0086ad">${num(d.tot.count)}</div></div>
-      <div class="card"><div class="l">Packed</div><div class="v" style="color:#1a7d1a">${num(d.tot.packed)}</div></div>
-      <div class="card"><div class="l">Loose</div><div class="v" style="color:#a86400">${num(d.tot.loose)}</div></div>
-      <div class="card"><div class="l">Damage</div><div class="v" style="color:#b11">${num(d.tot.damage)}</div></div>
+      <div class="card"><div class="l">SKUs tracked</div><div class="v" style="color:#0086ad">${num(t.skus)}</div><div class="s">${num(t.inStock)} in stock · ${num(t.out)} out</div></div>
+      <div class="card"><div class="l">Units on hand</div><div class="v">${num(t.onHand)}</div><div class="s">${num(t.packed)} packed · ${num(t.loose)} loose</div></div>
+      <div class="card"><div class="l">Stock value</div><div class="v" style="color:#1a7d1a">${R(t.value)}</div><div class="s">${d.valueMode?esc(d.basisLabel):'no marketplace rates recorded'}</div></div>
+      <div class="card"><div class="l">In-stock rate</div><div class="v">${rPct(t.fillRate)}</div><div class="s">target 95%+</div></div>
+      <div class="card"><div class="l">Needs reorder</div><div class="v" style="color:#b11">${num(d.reorder.length)}</div><div class="s">${num(d.reorderUnits)} units${d.valueMode?' · '+R(d.reorderCost):''}</div></div>
+      <div class="card"><div class="l">Damage / shrinkage</div><div class="v" style="color:#b11">${num(t.damage)}</div><div class="s">${rPct(t.shrinkage)}${d.valueMode?' · '+R(t.damageValue):''}</div></div>
+      <div class="card"><div class="l">Excess / dormant</div><div class="v" style="color:#a86400">${d.valueMode?R(d.eoValue):num(d.eoUnits)}</div><div class="s">${num(d.eo.length)} SKUs${d.valueMode?' · '+rPct(d.eoPct):' · units idle'}</div></div>
+      <div class="card"><div class="l">Count compliance</div><div class="v">${rPct(d.compliance)}</div><div class="s">≤${d.dorm}d · avg ${d.avgAge==null?'—':d.avgAge+'d'}</div></div>
     </div>
-    <h3>Stock by Category</h3>
-    <table><thead><tr><th>Category</th><th class="r">Products</th><th class="r">Packed</th><th class="r">Loose</th><th class="r">Damage</th><th class="r">Out</th></tr></thead>
-    <tbody>${catRows}</tbody>
-    <tfoot><tr><td>Total</td><td class="r">${num(d.tot.count)}</td><td class="r">${num(d.tot.packed)}</td><td class="r">${num(d.tot.loose)}</td><td class="r">${num(d.tot.damage)}</td><td class="r">${num(d.tot.out)}</td></tr></tfoot></table>
-    <h3 style="color:#b11">Out of Stock (${d.outList.length})</h3>
-    <table><thead><tr><th>Category</th><th>Product</th><th class="r">Damage</th></tr></thead><tbody>${outRows}</tbody></table>
-    <div class="foot"><span>Generated ${esc(genAt)}</span><span>indiabusinessinternational@gmail.com</span></div>
+
+    <div class="sec"><h3>Key findings</h3>
+    <table><tbody>${d.findings.map(f=>`<tr><td style="width:62px"><span class="flag ${f.t==='info'?'info':(f.t==='warn'?'warn':(f.t==='ok'?'ok':''))}">${f.t==='bad'?'ACTION':(f.t==='warn'?'REVIEW':(f.t==='ok'?'GOOD':'NOTE'))}</span></td><td>${esc(f.m)}</td></tr>`).join('')}</tbody></table></div>
+
+    <div class="sec"><h3>Stock health</h3>
+    <div class="note">Each SKU falls in exactly one band, most urgent first. Reorder point ${num(d.rop)} units; dormant after ${num(d.dorm)} days without a stock movement.</div>
+    <table><thead><tr><th>Band</th><th class="r">SKUs</th><th class="r">Share</th><th></th><th class="r">Units</th><th class="r">Value</th></tr></thead><tbody>
+    ${d.health.map(h=>`<tr><td>${esc(h.label)} <span class="muted">(${h.hint})</span></td><td class="r">${num(h.skus)}</td><td class="r">${rPct(h.share)}</td><td>${bar(h.share, h.cls==='bad'?'#b11':(h.cls==='warn'?'#e0a000':(h.cls==='good'?'#1a7d1a':'#00a0cc')))}</td><td class="r">${num(h.units)}</td><td class="r">${R(h.value)}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td><td class="r">${num(t.skus)}</td><td class="r">100.0%</td><td></td><td class="r">${num(t.onHand)}</td><td class="r">${R(t.value)}</td></tr></tfoot></table></div>
+
+    <div class="sec"><h3>ABC analysis (Pareto by stock ${d.metricLbl})</h3>
+    <div class="note">Class A = first 80% of stock ${d.metricLbl}, B = next 15%, C = the tail. No sales history exists in this sheet, so the split is on ${d.valueMode?'value on hand':'units on hand (no rates recorded)'}, not annual usage value. Count A monthly, B quarterly, C twice a year.</div>
+    <table><thead><tr><th>Class</th><th class="r">SKUs</th><th class="r">% of SKUs</th><th class="r">Units</th><th class="r">Value</th><th class="r">% of ${d.metricLbl}</th><th class="r">Out of stock</th></tr></thead><tbody>
+    ${d.abcRows.map(r=>`<tr><td><span class="cls ${r.cls}">${r.cls}</span> ${r.cls==='A'?'High value':(r.cls==='B'?'Medium':'Low / tail')}</td><td class="r">${num(r.skus)}</td><td class="r">${rPct(r.skuPct)}</td><td class="r">${num(r.units)}</td><td class="r">${R(r.value)}</td><td class="r">${rPct(r.pct)}</td><td class="r">${num(r.out)}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td><td class="r">${num(t.skus)}</td><td class="r">100.0%</td><td class="r">${num(t.onHand)}</td><td class="r">${R(t.value)}</td><td class="r">100.0%</td><td class="r">${num(t.out)}</td></tr></tfoot></table></div>
+
+    ${d.topValue.length?`<div class="sec"><h3>Top SKUs by stock ${d.metricLbl}</h3>
+    <table><thead><tr><th>#</th><th>Product</th><th class="r">On hand</th><th class="r">Rate</th><th class="r">Value</th><th class="r">Cumulative</th><th>Class</th></tr></thead><tbody>
+    ${d.topValue.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.product)}</td><td class="r">${num(p.onHand)}</td><td class="r">${R(p.rate)}</td><td class="r">${R(p.value)}</td><td class="r">${rPct(p.cumPct)}</td><td><span class="cls ${p.abc}">${p.abc}</span></td></tr>`).join('')}
+    </tbody></table></div>`:''}
+
+    <div class="sec"><h3>Category performance matrix</h3>
+    <table><thead><tr><th>Category</th><th class="r">SKUs</th><th class="r">On hand</th><th class="r">Packed %</th><th class="r">Value</th><th class="r">% of value</th><th class="r">In-stock %</th><th class="r">Damage %</th><th class="r">Avg age</th></tr></thead><tbody>
+    ${d.catRows.map(r=>`<tr><td>${esc(r.cat)}</td><td class="r">${num(r.skus)}</td><td class="r">${num(r.onHand)}</td><td class="r">${rPct(r.packedPct)}</td><td class="r">${R(r.value)}</td><td class="r">${d.valueMode?rPct(r.valPct):'—'}</td><td class="r">${rPct(r.fill)}</td><td class="r">${rPct(r.dmgRate)}</td><td class="r">${r.avgAge==null?'—':r.avgAge+'d'}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td><td class="r">${num(t.skus)}</td><td class="r">${num(t.onHand)}</td><td class="r">${rPct(t.packedPct)}</td><td class="r">${R(t.value)}</td><td class="r">${d.valueMode?'100.0%':'—'}</td><td class="r">${rPct(t.fillRate)}</td><td class="r">${rPct(t.shrinkage)}</td><td class="r">${d.avgAge==null?'—':d.avgAge+'d'}</td></tr></tfoot></table></div>
+
+    <div class="sec"><h3>Replenishment list (${d.reorder.length})</h3>
+    <div class="note">Min/max rule: any SKU at or below ${num(d.rop)} units is reordered up to ${num(d.maxCover)} units. Sorted by ABC class, then ${d.valueMode?'order value':'order quantity'}. ${d.valueMode?`Estimated value uses the ${esc(d.basisLabel).toLowerCase()} — a listed-price estimate, not a purchase cost.`:'No rates are recorded, so no order value can be estimated.'}</div>
+    ${d.reorder.length?`<table><thead><tr><th>Class</th><th>Product</th><th>Category</th><th class="r">Packed</th><th class="r">Loose</th><th class="r">On hand</th><th class="r">Order qty</th><th class="r">Est. value</th><th class="r">Idle</th></tr></thead><tbody>
+    ${d.reorder.slice(0,N).map(p=>`<tr><td><span class="cls ${p.abc}">${p.abc}</span></td><td>${esc(p.product)}</td><td>${esc(p.category)}</td><td class="r">${num(p.packed)}</td><td class="r">${num(p.loose)}</td><td class="r">${num(p.onHand)}</td><td class="r">${num(p.suggest)}</td><td class="r">${R(p.cost)}</td><td class="r">${p.age==null?'—':p.age+'d'}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td colspan="6">Total (${num(d.reorder.length)} SKUs)</td><td class="r">${num(d.reorderUnits)}</td><td class="r">${R(d.reorderCost)}</td><td></td></tr></tfoot></table>
+    ${cap(d.reorder,N,'SKUs')}`:'<div class="note">Nothing at or below the reorder point.</div>'}</div>
+
+    <div class="sec"><h3>Excess &amp; obsolete — no movement in ${d.dorm}+ days (${d.eo.length})</h3>
+    <div class="note">Stock still on hand whose last recorded movement is at least ${num(d.dorm)} days old (or never stamped). ${d.eo.length?`${num(d.eoUnits)} units${d.valueMode?` worth ${R(d.eoValue)} — ${rPct(d.eoPct)} of stock value`:''} sitting idle.`:''}</div>
+    ${d.eo.length?`<table><thead><tr><th>Product</th><th>Category</th><th class="r">On hand</th><th class="r">Value</th><th class="r">Days idle</th><th>Last movement</th></tr></thead><tbody>
+    ${d.eo.slice(0,N).map(p=>`<tr><td>${esc(p.product)}</td><td>${esc(p.category)}</td><td class="r">${num(p.onHand)}</td><td class="r">${R(p.value)}</td><td class="r">${p.age==null?'never':p.age}</td><td>${esc(p.updated||'—')}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td colspan="2">Total (${num(d.eo.length)} SKUs)</td><td class="r">${num(d.eoUnits)}</td><td class="r">${R(d.eoValue)}</td><td colspan="2"></td></tr></tfoot></table>
+    ${cap(d.eo,N,'SKUs')}`:'<div class="note">No dormant stock — everything has moved recently.</div>'}</div>
+
+    <div class="sec"><h3>Damage &amp; shrinkage (${d.dmgList.length} SKUs)</h3>
+    <div class="note">Shrinkage rate = damaged units ÷ (on hand + damaged). Above 2% on a SKU warrants a root-cause check on handling, packing or courier.</div>
+    ${d.dmgList.length?`<table><thead><tr><th>Product</th><th>Category</th><th class="r">On hand</th><th class="r">Damaged</th><th class="r">Rate</th><th class="r">Value lost</th><th></th></tr></thead><tbody>
+    ${d.dmgList.slice(0,N).map(p=>`<tr><td>${esc(p.product)}</td><td>${esc(p.category)}</td><td class="r">${num(p.onHand)}</td><td class="r">${num(p.damage)}</td><td class="r">${rPct(p.dmgRate)}</td><td class="r">${R(p.damageValue)}</td><td>${p.dmgRate>10?'<span class="flag">critical</span>':(p.dmgRate>2?'<span class="flag warn">high</span>':'')}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td colspan="2">Total</td><td class="r">${num(t.onHand)}</td><td class="r">${num(t.damage)}</td><td class="r">${rPct(t.shrinkage)}</td><td class="r">${R(t.damageValue)}</td><td></td></tr></tfoot></table>
+    ${cap(d.dmgList,N,'SKUs')}`:'<div class="note">No damaged stock recorded.</div>'}</div>
+
+    <div class="sec"><h3>Stock-count aging &amp; cycle-count compliance</h3>
+    <div class="note">Age of the last recorded stock movement per SKU. ${rPct(d.compliance)} of SKUs were touched within ${num(d.dorm)} days; the usual cycle-count target is 95%+.</div>
+    <table><thead><tr><th>Last movement</th><th class="r">SKUs</th><th class="r">Share</th><th></th><th class="r">Units</th><th class="r">Value</th></tr></thead><tbody>
+    ${d.ageRows.map((r,i)=>`<tr><td>${esc(r.label)}</td><td class="r">${num(r.skus)}</td><td class="r">${rPct(r.share)}</td><td>${bar(r.share, i>=d.ageRows.length-2?'#b11':(i===0?'#1a7d1a':'#00a0cc'))}</td><td class="r">${num(r.units)}</td><td class="r">${R(r.value)}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td><td class="r">${num(t.skus)}</td><td class="r">100.0%</td><td></td><td class="r">${num(t.onHand)}</td><td class="r">${R(t.value)}</td></tr></tfoot></table></div>
+
+    <div class="sec"><h3>Channel price positioning (Amazon vs Flipkart)</h3>
+    <div class="note">Priced on both: ${num(d.price.both)} · dearer on Amazon: ${num(d.price.amzHigher)} · dearer on Flipkart: ${num(d.price.flpHigher)} · at parity: ${num(d.price.parity)} · Amazon only: ${num(d.price.amzOnly)} · Flipkart only: ${num(d.price.flpOnly)} · no rate at all: ${num(d.price.none)} · average gap: ${rPct(d.price.avgGapPct)}.</div>
+    ${d.price.top.length?`<table><thead><tr><th>Product</th><th class="r">Amazon</th><th class="r">Flipkart</th><th class="r">Gap</th><th class="r">Gap %</th><th>Dearer on</th></tr></thead><tbody>
+    ${d.price.top.map(x=>`<tr><td>${esc(x.product)}</td><td class="r">${R(x.amz)}</td><td class="r">${R(x.flp)}</td><td class="r">${R(Math.abs(x.gap))}</td><td class="r">${rPct(Math.abs(x.gapPct))}</td><td>${x.gap>0?'Amazon':'Flipkart'}</td></tr>`).join('')}
+    </tbody></table>`:'<div class="note">No SKU is priced on both channels.</div>'}</div>
+
+    <div class="sec"><h3>GST slab exposure</h3>
+    <div class="note">Tax component assumes listed marketplace rates are GST-inclusive (value × r ÷ (100 + r)) — an exposure indicator for stock held, not a return figure.</div>
+    ${d.gstRows.length?`<table><thead><tr><th>GST slab</th><th class="r">SKUs</th><th class="r">Units</th><th class="r">Stock value</th><th class="r">Tax component</th><th class="r">% of value</th></tr></thead><tbody>
+    ${d.gstRows.map(r=>`<tr><td>${r.rate==null?'Not set':esc(r.rate)+'%'}</td><td class="r">${num(r.skus)}</td><td class="r">${num(r.units)}</td><td class="r">${R(r.value)}</td><td class="r">${r.rate==null?'—':R(r.tax)}</td><td class="r">${d.valueMode?rPct(rShare(r.value,t.value)):'—'}</td></tr>`).join('')}
+    </tbody><tfoot><tr><td>Total</td><td class="r">${num(t.skus)}</td><td class="r">${num(t.onHand)}</td><td class="r">${R(t.value)}</td><td class="r">${R(d.gstRows.reduce((s,r)=>s+r.tax,0))}</td><td class="r">${d.valueMode?'100.0%':'—'}</td></tr></tfoot></table>`:'<div class="note">No GST rates recorded.</div>'}</div>
+
+    <div class="sec"><h3>Data quality scorecard — ${rPct(d.qualityScore)} complete</h3>
+    <table><thead><tr><th>Field</th><th class="r">Complete</th><th class="r">Missing</th><th class="r">%</th><th></th></tr></thead><tbody>
+    ${d.quality.map(q=>`<tr><td>${esc(q.label)}</td><td class="r">${num(q.ok)}</td><td class="r">${num(q.missing)}</td><td class="r">${rPct(q.pct)}</td><td>${bar(q.pct, q.pct>=95?'#1a7d1a':(q.pct>=70?'#e0a000':'#b11'))}</td></tr>`).join('')}
+    </tbody></table></div>
+
+    <div class="foot"><span>Generated ${esc(d.generatedAt)} · IBI Stock Availability</span><span>indiabusinessinternational@gmail.com</span></div>
   </body></html>`;
   const win=window.open('','_blank');
   if(!win){ showToast('Allow pop-ups to print, or use Download CSV','error'); return; }
   win.document.open(); win.document.write(html); win.document.close(); win.focus();
-  setTimeout(()=>{ try{ win.print(); }catch(e){} }, 400);
+  setTimeout(()=>{ try{ win.print(); }catch(e){} }, 500);
 }
 
+// ── CSV (every section, every row — nothing capped) ──
 function downloadReportCSV(){
   if(!lastReport){ showToast('Generate a report first','error'); return; }
-  const d=lastReport;
+  const d=lastReport, t=d.tot;
+  const r2=n=>Math.round((Number(n)||0)*100)/100;
+  const CV=n=>d.valueMode?r2(n):'';    // ₹ columns stay blank when nothing is priced
   const rows=[
-    ['IBI Stock Availability — Report'],
+    ['IBI Stock & Inventory Analysis Report'],
     ['Selection', d.label],
-    ['Generated', new Date().toLocaleString('en-US')],
+    ['Valuation basis', d.valueMode ? d.basisLabel : d.basisLabel+' — UNAVAILABLE, no marketplace rates recorded (quantity basis)'],
+    ['Reorder point (units)', d.rop],
+    ['Max cover (units)', d.maxCover],
+    ['Dormant after (days)', d.dorm],
+    ['Generated', d.generatedAt],
     [],
-    ['STOCK BY CATEGORY'],
-    ['Category','Products','Packed','Loose','Damage','Out of Stock']
+    ['EXECUTIVE SUMMARY'],
+    ['Metric','Value'],
+    ['SKUs tracked', t.skus],
+    ['SKUs in stock', t.inStock],
+    ['SKUs out of stock', t.out],
+    ['In-stock rate %', r2(t.fillRate)],
+    ['Units on hand', t.onHand],
+    ['Packed units', t.packed],
+    ['Loose units', t.loose],
+    ['Packed (ship-ready) %', r2(t.packedPct)],
+    ['Damaged units', t.damage],
+    ['Shrinkage %', r2(t.shrinkage)],
+    ['Stock value', CV(t.value)],
+    ['Damaged stock value', CV(t.damageValue)],
+    ['SKUs with no marketplace rate', t.unpriced],
+    ['SKUs at/below reorder point', d.reorder.length],
+    ['Replenishment units required', d.reorderUnits],
+    ['Replenishment estimated value', CV(d.reorderCost)],
+    ['Excess/dormant SKUs', d.eo.length],
+    ['Excess/dormant units', d.eoUnits],
+    ['Excess/dormant value', CV(d.eoValue)],
+    ['Excess/dormant % of value', d.valueMode?r2(d.eoPct):''],
+    ['Cycle-count compliance %', r2(d.compliance)],
+    ['Average stock-count age (days)', d.avgAge==null?'':d.avgAge],
+    ['Data completeness %', r2(d.qualityScore)],
+    [],
+    ['KEY FINDINGS'],
+    ['Priority','Finding']
   ];
-  d.catRows.forEach(r=>rows.push([r.cat,r.count,r.packed,r.loose,r.damage,r.out]));
-  rows.push(['Total',d.tot.count,d.tot.packed,d.tot.loose,d.tot.damage,d.tot.out],[]);
-  rows.push(['OUT OF STOCK'],['Category','Product','Damage']);
-  if(d.outList.length) d.outList.forEach(e=>rows.push([e.category||'',e.product||'',(+e.damage||0)]));
-  else rows.push(['None — every product has stock.']);
-  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  d.findings.forEach(f=>rows.push([f.t==='bad'?'ACTION':(f.t==='warn'?'REVIEW':(f.t==='ok'?'GOOD':'NOTE')), f.m]));
+
+  rows.push([], ['STOCK HEALTH'], ['Band','Definition','SKUs','Share %','Units','Value']);
+  d.health.forEach(h=>rows.push([h.label,h.hint,h.skus,r2(h.share),h.units,CV(h.value)]));
+  rows.push(['Total','',t.skus,100,t.onHand,CV(t.value)]);
+
+  rows.push([], ['ABC ANALYSIS (by stock '+d.metricLbl+' on hand)'], ['Class','SKUs','% of SKUs','Units','Value','% of '+d.metricLbl,'Out of stock']);
+  d.abcRows.forEach(r=>rows.push([r.cls,r.skus,r2(r.skuPct),r.units,CV(r.value),r2(r.pct),r.out]));
+  rows.push(['Total',t.skus,100,t.onHand,CV(t.value),100,t.out]);
+
+  rows.push([], ['CATEGORY PERFORMANCE MATRIX'], ['Category','SKUs','Packed','Loose','On hand','Packed %','Damaged','Damage %','Value','% of value','Out of stock','In-stock %','Avg count age (days)']);
+  d.catRows.forEach(r=>rows.push([r.cat,r.skus,r.packed,r.loose,r.onHand,r2(r.packedPct),r.damage,r2(r.dmgRate),CV(r.value),d.valueMode?r2(r.valPct):'',r.out,r2(r.fill),r.avgAge==null?'':r.avgAge]));
+  rows.push(['Total',t.skus,t.packed,t.loose,t.onHand,r2(t.packedPct),t.damage,r2(t.shrinkage),CV(t.value),d.valueMode?100:'',t.out,r2(t.fillRate),d.avgAge==null?'':d.avgAge]);
+
+  rows.push([], ['REPLENISHMENT LIST (at or below reorder point)'], ['ABC','Product','Category','Packed','Loose','On hand','Damaged','Unit rate','Order qty','Estimated value','Days idle','Last movement']);
+  if(d.reorder.length) d.reorder.forEach(p=>rows.push([p.abc,p.product,p.category,p.packed,p.loose,p.onHand,p.damage,CV(p.rate),p.suggest,CV(p.cost),p.age==null?'':p.age,p.updated||'']));
+  else rows.push(['None — nothing at or below the reorder point.']);
+  if(d.reorder.length) rows.push(['Total','','','','','','','',d.reorderUnits,CV(d.reorderCost),'','']);
+
+  rows.push([], ['EXCESS & OBSOLETE (no movement in '+d.dorm+'+ days)'], ['Product','Category','On hand','Unit rate','Value','Days idle','Last movement']);
+  if(d.eo.length) d.eo.forEach(p=>rows.push([p.product,p.category,p.onHand,CV(p.rate),CV(p.value),p.age==null?'never':p.age,p.updated||'']));
+  else rows.push(['None — everything has moved recently.']);
+
+  rows.push([], ['DAMAGE & SHRINKAGE'], ['Product','Category','On hand','Damaged','Damage rate %','Value lost','Last movement']);
+  if(d.dmgList.length) d.dmgList.forEach(p=>rows.push([p.product,p.category,p.onHand,p.damage,r2(p.dmgRate),CV(p.damageValue),p.updated||'']));
+  else rows.push(['None — no damaged stock recorded.']);
+
+  rows.push([], ['STOCK-COUNT AGING'], ['Last movement','SKUs','Share %','Units','Value']);
+  d.ageRows.forEach(r=>rows.push([r.label,r.skus,r2(r.share),r.units,CV(r.value)]));
+  rows.push(['Cycle-count compliance %', r2(d.compliance)]);
+
+  rows.push([], ['CHANNEL PRICE POSITIONING'], ['Metric','Value']);
+  rows.push(['Priced on both channels',d.price.both],['Dearer on Amazon',d.price.amzHigher],['Dearer on Flipkart',d.price.flpHigher],['At parity',d.price.parity],['Amazon rate only',d.price.amzOnly],['Flipkart rate only',d.price.flpOnly],['No rate at all',d.price.none],['Average absolute gap %',r2(d.price.avgGapPct)]);
+  rows.push([], ['Product','Amazon avg','Flipkart avg','Gap','Gap %','Dearer on']);
+  if(d.price.top.length) d.price.top.forEach(x=>rows.push([x.product,r2(x.amz),r2(x.flp),r2(Math.abs(x.gap)),r2(Math.abs(x.gapPct)),x.gap>0?'Amazon':'Flipkart']));
+  else rows.push(['No SKU is priced on both channels.']);
+
+  rows.push([], ['GST SLAB EXPOSURE (rates assumed GST-inclusive)'], ['GST slab','SKUs','Units','Stock value','Tax component','% of value']);
+  d.gstRows.forEach(r=>rows.push([r.rate==null?'Not set':r.rate+'%',r.skus,r.units,CV(r.value),r.rate==null?'':CV(r.tax),d.valueMode?r2(rShare(r.value,t.value)):'']));
+
+  rows.push([], ['DATA QUALITY SCORECARD'], ['Field','Complete','Missing','% complete']);
+  d.quality.forEach(q=>rows.push([q.label,q.ok,q.missing,r2(q.pct)]));
+  rows.push(['Overall completeness %', r2(d.qualityScore)]);
+
+  rows.push([], ['SKU DETAIL (every row in this selection)'],
+    ['S.No','Product','Category','HSN','GST %','Packed','Loose','On hand','Damaged','Damage rate %','Unit rate','Stock value','ABC','Health band','Amazon avg','Flipkart avg','Rating','Days since movement','Last movement']);
+  d.P.slice().sort((a,b)=>b.value-a.value||a.product.localeCompare(b.product)).forEach(p=>rows.push([
+    p.sno||'',p.product,p.category,p.hsn,p.gst==null?'':p.gst,p.packed,p.loose,p.onHand,p.damage,
+    r2(rShare(p.damage,p.onHand+p.damage)),CV(p.rate),CV(p.value),p.abc,
+    (d.health.find(h=>h.key===p.health)||{}).label||p.health,
+    p.amz==null?'':r2(p.amz),p.flp==null?'':r2(p.flp),p.rating==null?'':p.rating,
+    p.age==null?'':p.age,p.updated||''
+  ]));
+
+  const csv=rows.map(r=>r.map(v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
   const slug=d.label.replace(/[^0-9a-zA-Z]+/g,'_').replace(/^_|_$/g,'').toLowerCase();
-  a.download=`ibi_stock_report_${slug}.csv`; a.click();
+  a.download=`ibi_stock_analysis_${slug}.csv`; a.click();
 }
 
 // ── SERVICE WORKER ──

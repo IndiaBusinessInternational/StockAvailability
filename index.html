@@ -412,7 +412,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v2.2</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v2.3</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -679,7 +679,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v2.2 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v2.3 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -1332,6 +1332,48 @@ function buildProductList(){
   const dl=document.getElementById('productList');
   if(dl) dl.innerHTML = names.map(n=>`<option value="${esc(n)}"></option>`).join('');
 }
+
+// ═════════════ LIVE PRODUCT CATALOGUE FEED ═════════════
+// products.js is a snapshot. The live list is IBI_Complete_Product_Master_HSN_GST.xlsx
+// in Google Drive, republished as catalogue.json by the Multi-Calculator's sync workflow
+// every few minutes — so editing that spreadsheet updates this app on its own, with no
+// code change and no redeploy.
+//
+// products.js stays as the offline fallback and as the floor: a short, malformed or
+// unreachable payload is ignored rather than applied, so a bad feed can never empty the
+// suggestions. The last good copy is kept in localStorage for offline starts.
+var IBI_CATALOGUE_FEED_URL = 'https://calculator.indiabusinessinternational.online/catalogue.json';
+
+function ibiApplyCatalogueFeed(products){
+  if(!Array.isArray(products) || products.length < 50) return false;
+  const names = products.filter(p => p && p.n).map(p => String(p.n));
+  if(names.length < 50) return false;
+  window.IBI_PRODUCT_NAMES = names;
+  try{ buildProductList(); }catch(err){}
+  return true;
+}
+
+function ibiRefreshCatalogueFeed(){
+  try{
+    const cached = JSON.parse(localStorage.getItem('ibi_catalogue_feed') || 'null');
+    if(cached && cached.products) ibiApplyCatalogueFeed(cached.products);
+  }catch(err){}
+  fetch(IBI_CATALOGUE_FEED_URL + '?t=' + Date.now(), { cache:'no-store' })
+    .then(res => res.ok ? res.json() : Promise.reject(res.status))
+    .then(data => {
+      if(ibiApplyCatalogueFeed(data.products)){
+        try{ localStorage.setItem('ibi_catalogue_feed', JSON.stringify(data)); }catch(err){}
+      }
+    })
+    .catch(() => {});
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', () => setTimeout(ibiRefreshCatalogueFeed, 400));
+}else{
+  setTimeout(ibiRefreshCatalogueFeed, 400);
+}
+
 function nextSno(){
   let mx=0; items.forEach(e=>{ const n=parseInt(e.sno,10); if(!isNaN(n)&&n>mx) mx=n; });
   return mx+1;

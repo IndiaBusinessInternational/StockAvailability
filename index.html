@@ -412,7 +412,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v2.4</span></div>
+        <div class="app-name">IBI Stock Availability <span class="ver-badge" onclick="ceoUnlock()" title="">v2.5</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -679,7 +679,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v2.4 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v2.5 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -1142,14 +1142,20 @@ async function gasPost(params, timeoutMs=40000){
   }catch(e){ clearTimeout(timer); throw e; }
 }
 
-// ── CEO LOCK (server-verified) ──
-// The password is NOT stored in this page — it is checked by the Apps Script
-// backend (verifyCeo), and every import must carry it (importNames rejects a
-// wrong/absent PIN). The CEO's entry is held only in memory for the session, to
-// authorise imports; a reload clears it and re-locks. Revealing the importer in
-// dev tools is not enough to upload without knowing the password.
+// ── CEO LOCK (verified by IBI CEO Auth) ──
+// The password is NOT in this page and NOT in this app's backend either. There
+// is one CEO password for all IBI apps, held in Script Properties on a separate
+// "IBI CEO Auth" script. This asks that script, and keeps the short-lived
+// SIGNED TOKEN it returns — never the password itself. Every import carries the
+// token, and the Stock backend verifies its signature before writing, so
+// revealing the importer in dev tools is still not enough to upload.
+// A reload clears the token and re-locks.
+//
+// text/plain keeps this a "simple" request so the browser skips the CORS
+// preflight that Apps Script will not answer.
+const CEO_AUTH_URL = "https://script.google.com/macros/s/AKfycbxIW4j7m51JjX6yt38-a1X6XrDRyZp3czMYN8eXECfP9H2twjfrgLaozWCCl843AgWo0g/exec";
 let ceoUnlocked = false;
-let ceoPin = '';
+let ceoToken = '';
 async function ceoUnlock(){
   if(ceoUnlocked){ openImport(); return; }
   if(!GAS_URL){ showToast('Connect the backend first','error'); openBackend(); return; }
@@ -1159,13 +1165,21 @@ async function ceoUnlock(){
   if(!pin){ showToast('Enter the password','error'); return; }
   showToast('Checking…');
   let res;
-  try{ res = await gasPost({action:'verifyCeo', pin}); }
-  catch(e){ showToast('Could not reach backend','error'); return; }
-  if(!res || res.status!=='ok' || typeof res.valid==='undefined'){
-    showToast('Backend needs redeploy to enable CEO lock','error'); return;
+  try{
+    const r = await fetch(CEO_AUTH_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action:'verifyCeo', pin})
+    });
+    res = await r.json();
+  }catch(e){ showToast('Could not reach the password service','error'); return; }
+  if(!res || !res.ok){
+    // A lockout or an unconfigured server should not read as a wrong password.
+    showToast((res && res.code && res.code!=='incorrect' && res.error)
+      ? res.error : 'Incorrect password', 'error');
+    return;
   }
-  if(!res.valid){ showToast('Incorrect password','error'); return; }
-  ceoUnlocked = true; ceoPin = pin;
+  ceoUnlocked = true; ceoToken = res.token;
   const b = document.getElementById('drawerImportBtn'); if(b) b.style.display='';
   showToast('✓ CEO mode unlocked');
   openImport();
@@ -1276,8 +1290,8 @@ async function doImport(){
   const status=document.getElementById('importStatus');
   status.textContent=(mode==='replace'?'Replacing with ':'Uploading ')+_importNames.length+' names… please wait';
   try{
-    const res=await gasPost({action:'importNames', mode, names:JSON.stringify(_importNames), pin:ceoPin});
-    if(res && res.code==='auth'){ ceoUnlocked=false; ceoPin=''; const b=document.getElementById('drawerImportBtn'); if(b) b.style.display='none'; closeImport(); throw new Error('CEO password no longer valid — please unlock again.'); }
+    const res=await gasPost({action:'importNames', mode, names:JSON.stringify(_importNames), token:ceoToken});
+    if(res && res.code==='auth'){ ceoUnlocked=false; ceoToken=''; const b=document.getElementById('drawerImportBtn'); if(b) b.style.display='none'; closeImport(); throw new Error('CEO password no longer valid — please unlock again.'); }
     if(!res || res.status!=='ok') throw new Error((res&&res.message)||'Import failed');
     const msg = mode==='replace'
       ? ('Replaced — '+res.added+' products loaded'+(res.removed?(' (removed '+res.removed+')'):'')+'.')

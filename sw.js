@@ -1,8 +1,11 @@
-const CACHE = 'ibi-stock-v2.5.0';
+const CACHE = 'ibi-stock-v2.6.0';
 const ASSETS = ['./index.html', './manifest.json', './products.js'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  // {cache:'reload'} bypasses the HTTP cache — plain addAll() can precache a
+  // STALE file the browser already holds, shipping old JS under a new badge.
+  e.waitUntil(caches.open(CACHE).then(c =>
+    c.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' })))));
   self.skipWaiting();
 });
 

@@ -1,4 +1,4 @@
-# IBI Stock Availability
+# IBI Stock Availability v2.9
 
 Stock &amp; inventory availability tracker for **India Business International** (Kanyakumari).
 

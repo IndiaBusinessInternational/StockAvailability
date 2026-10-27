@@ -1,4 +1,6 @@
-# IBI Stock Availability v2.11
+# IBI Stock Availability v2.12
+
+v2.12 (27 Oct 2026): top bar fits a 360 px phone with the Share button: the title shortens with "…", the Dark/Light word hides, the version badge always shows.
 
 v2.11 (27 Oct 2026): new "Share this app" button in the top bar (ibi-share.js).
 

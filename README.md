@@ -1,4 +1,6 @@
-# IBI Stock Availability v2.12
+# IBI Stock Availability v2.13
+
+v2.13 (27 Oct 2026): edge to edge on every screen size: no centred 1180 px column on laptops; full-bleed boxes with 10 px inner padding; the add-stock form puts four fields per row on wide screens.
 
 v2.12 (27 Oct 2026): top bar fits a 360 px phone with the Share button: the title shortens with "…", the Dark/Light word hides, the version badge always shows.
 

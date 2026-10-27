@@ -425,6 +425,39 @@ tr.row-editing td{background:var(--info-bg) !important}
 .app-name{display:flex;align-items:center;gap:6px;min-width:0}
 .app-title-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 @media (max-width:420px){.toggle-label{display:none}}
+/* v2.13 EDGE TO EDGE ON EVERY SCREEN SIZE (Founder 27 Oct 2026: "Yes, make all the apps edge to edge on laptop too").
+   No centred 1180px column: top bar, hero and content use the full width at every size; boxes are full-bleed with
+   10px inner side padding; wide screens put four form fields per row. Phone-only type sizes stay in the 640px blocks. */
+html,body{overflow-x:clip}
+.topbar{padding:0 8px}
+.topbar-inner,.hero-inner,.main{max-width:none}
+.hero{padding-left:10px;padding-right:10px}
+.main{padding:8px 0 24px}
+.summary-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));padding:0;gap:8px;margin-bottom:8px}
+.metric,.lowstock-alert,.section-hdr,.form-card,.status-bar,.table-wrap{border-radius:0;border-left:0;border-right:0;box-shadow:none}
+.metric{padding:12px 10px 10px;overflow-wrap:break-word}
+.lowstock-alert{padding:12px 10px;margin-bottom:8px;overflow-wrap:break-word}
+.section-hdr{padding:10px}
+.form-card{padding:12px 10px;overflow-wrap:break-word}
+.edit-banner{padding:10px}
+.status-bar{padding:8px 10px;margin-bottom:8px}
+.filter-row,.filter-summary{padding-left:10px;padding-right:10px}
+.install-banner,.setup-banner{padding-left:10px;padding-right:10px}
+th:first-child,td:first-child{padding-left:10px}
+th:last-child,td:last-child{padding-right:10px}
+.footer{padding-left:10px;padding-right:10px}
+button,.btn,select,input,[role="button"]{overflow-wrap:normal}
+@media(min-width:900px){
+  .form-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .form-group.full{grid-column:span 2}
+}
+/* the first form row (category, S.No, product, HSN, GST) fits on one line on a laptop */
+@media(min-width:1200px){
+  #formCard>.form-grid:not([style]){grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  .summary-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
 </style>
 <script src="ibi-share.js" defer data-slot=".topbar-right"></script>
 </head>
@@ -445,7 +478,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name"><span class="app-title-txt">IBI Stock Availability</span> <span class="ver-badge" onclick="ceoUnlock()" title="">v2.12</span></div>
+        <div class="app-name"><span class="app-title-txt">IBI Stock Availability</span> <span class="ver-badge" onclick="ceoUnlock()" title="">v2.13</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -650,7 +683,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   </div>
 
   <!-- TABLE -->
-  <div class="section-hdr" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0;margin-top:4px">
+  <div class="section-hdr" style="margin-top:4px">
     <div class="section-title"><i class="ti ti-table"></i> Stock List <span class="count-badge" id="countBadge">0</span></div>
   </div>
   <div class="table-wrap">
@@ -712,7 +745,7 @@ tr.row-editing td{background:var(--info-bg) !important}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v2.12 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v2.13 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -734,7 +767,7 @@ tr.row-editing td{background:var(--info-bg) !important}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 2.12 — October 2026 · Share this app button</div>
+  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 2.13 — October 2026 · Share this app button</div>
 </div>
 
 <!-- REPORT MODAL -->

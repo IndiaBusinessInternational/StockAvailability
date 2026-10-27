@@ -1,4 +1,6 @@
-# IBI Stock Availability v2.10
+# IBI Stock Availability v2.11
+
+v2.11 (27 Oct 2026): new "Share this app" button in the top bar (ibi-share.js).
 
 Stock &amp; inventory availability tracker for **India Business International** (Kanyakumari).
 

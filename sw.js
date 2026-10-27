@@ -1,5 +1,5 @@
-const CACHE = 'ibi-stock-v2.10.0';
-const ASSETS = ['./index.html', './manifest.json', './products.js'];
+const CACHE = 'ibi-stock-v2.11.0';
+const ASSETS = ['./index.html', './manifest.json', './products.js', './ibi-share.js'];
 
 self.addEventListener('install', e => {
   // {cache:'reload'} bypasses the HTTP cache — plain addAll() can precache a

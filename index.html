@@ -478,7 +478,7 @@ button,.btn,select,input,[role="button"]{overflow-wrap:normal}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name"><span class="app-title-txt">IBI Stock Availability</span> <span class="ver-badge" onclick="ceoUnlock()" title="">v2.13</span></div>
+        <div class="app-name"><span class="app-title-txt">IBI Stock Availability</span> <span class="ver-badge" onclick="ceoUnlock()" title="">v2.15</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -532,21 +532,22 @@ button,.btn,select,input,[role="button"]{overflow-wrap:normal}
       <div class="metric-label"><i class="ti ti-package"></i> Products</div>
       <div class="metric-value products" id="sumProducts">0</div>
       <div class="metric-sub" id="sumOutOfStock">0 out of stock</div>
+      <div class="metric-sub"><span id="sumPackRows">0</span> pack rows not counted</div>
     </div>
     <div class="metric m-packed">
       <div class="metric-label"><i class="ti ti-box"></i> Packed Stock</div>
       <div class="metric-value packed" id="sumPacked">0</div>
-      <div class="metric-sub">units ready</div>
+      <div class="metric-sub">units ready, 1 Qty rows only</div>
     </div>
     <div class="metric m-loose">
       <div class="metric-label"><i class="ti ti-basket"></i> Loose Stock</div>
       <div class="metric-value loose" id="sumLoose">0</div>
-      <div class="metric-sub">units unpacked</div>
+      <div class="metric-sub">units unpacked, 1 Qty rows only</div>
     </div>
     <div class="metric m-damage">
       <div class="metric-label"><i class="ti ti-alert-triangle"></i> Damage Stock</div>
       <div class="metric-value damage" id="sumDamage">0</div>
-      <div class="metric-sub">units damaged</div>
+      <div class="metric-sub">units damaged, 1 Qty rows only</div>
     </div>
   </div>
 
@@ -745,7 +746,7 @@ button,.btn,select,input,[role="button"]{overflow-wrap:normal}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v2.13 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v2.15 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -767,7 +768,7 @@ button,.btn,select,input,[role="button"]{overflow-wrap:normal}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 2.13 — October 2026 · Share this app button</div>
+  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 2.15 — November 2026 · Totals count 1 Qty rows only</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -1639,13 +1640,54 @@ function filtered(){
   return list;
 }
 
+// ── REAL STOCK = 1 QTY ROWS ONLY (Founder 5 Nov 2026) ──
+// A pack row (name ends "2 Qty", "4 Qty"...) only shows the 1 Qty count divided by the
+// pack size, so it must not be added to any total. Same matching as Order Processing and
+// the Returns Logger (_opPackLinks_): names decide, two 1 Qty rows with one name are not
+// a match, and a pack row with no clear 1 Qty row holds real stock itself, so it counts.
+const PACK_BASE_OVERRIDE={
+  'SK1788247249817':'SK1783673775876_252',
+  'SK1788246999848':'SK1783673775876_254',
+  'SK1783673775876_8':'SK1783673775876_9',
+  'SK1783673775876_26':'SK1783673775876_27',
+  'SK1788248180120':'SK1783673775876_27'
+};
+function packTail(name){ const m=String(name||'').match(/[,\s]*\b(\d+)\s*qty\s*$/i); return m?(parseInt(m[1],10)||0):0; }
+function packUnitLike(name){ return /qty\s+pack|\bset\s+of\b|\bpack\s+of\b|combo|carton/i.test(String(name||'')); }
+function packKey(name){
+  return String(name||'').replace(/[,\s]*\b(\d+)\s*qty\s*$/i,'').toLowerCase()
+    .replace(/\beach\b/g,' ').replace(/\b\d+(\.\d+)?\s*(gm|gms|g|kg)\b/g,' ')
+    .replace(/\s*x\s*/g,'x').replace(/[^a-z0-9.x]+/g,' ').trim();
+}
+function packLinks(rows){
+  const ones={}, ids={}, map={};
+  rows.forEach(r=>{
+    const id=String(r.id||'').trim(); if(!id) return;
+    ids[id]=r;
+    if(packUnitLike(r.product)||packTail(r.product)!==1) return;
+    const k=packKey(r.product); (ones[k]=ones[k]||[]).push(id);
+  });
+  rows.forEach(r=>{
+    const id=String(r.id||'').trim(); if(!id||packUnitLike(r.product)) return;
+    const t=packTail(r.product); if(t<2) return;
+    const c=ones[packKey(r.product)]||[];
+    const base=PACK_BASE_OVERRIDE[id]||(c.length===1?c[0]:'');
+    if(base&&ids[base]) map[id]={base,pack:t};
+  });
+  return map;
+}
+function realRows(rows){ const m=packLinks(items); return rows.filter(e=>!m[String(e.id||'').trim()]); }
+
 function render(){
   const list=filtered(), body=document.getElementById('stockBody'), empty=document.getElementById('emptyState');
-  const P=items.reduce((s,e)=>s+(+e.packed||0),0);
-  const L=items.reduce((s,e)=>s+(+e.loose||0),0);
-  const D=items.reduce((s,e)=>s+(+e.damage||0),0);
-  const outCt=items.filter(e=>(+e.packed||0)+(+e.loose||0)<=0).length;
-  document.getElementById('sumProducts').textContent=num(items.length);
+  const links=packLinks(items);
+  const real=items.filter(e=>!links[String(e.id||'').trim()]);
+  const P=real.reduce((s,e)=>s+(+e.packed||0),0);
+  const L=real.reduce((s,e)=>s+(+e.loose||0),0);
+  const D=real.reduce((s,e)=>s+(+e.damage||0),0);
+  const outCt=real.filter(e=>(+e.packed||0)+(+e.loose||0)<=0).length;
+  document.getElementById('sumProducts').textContent=num(real.length);
+  document.getElementById('sumPackRows').textContent=num(items.length-real.length);
   document.getElementById('sumPacked').textContent=num(P);
   document.getElementById('sumLoose').textContent=num(L);
   document.getElementById('sumDamage').textContent=num(D);
@@ -1660,9 +1702,10 @@ function render(){
   const fsBox=document.getElementById('filterSummary');
   if(q||fCat!=='all'||fStatus!=='all'){
     document.getElementById('fsCount').textContent=list.length;
-    document.getElementById('fsPacked').textContent=num(list.reduce((s,e)=>s+(+e.packed||0),0));
-    document.getElementById('fsLoose').textContent=num(list.reduce((s,e)=>s+(+e.loose||0),0));
-    document.getElementById('fsDamage').textContent=num(list.reduce((s,e)=>s+(+e.damage||0),0));
+    const fReal=list.filter(e=>!links[String(e.id||'').trim()]);
+    document.getElementById('fsPacked').textContent=num(fReal.reduce((s,e)=>s+(+e.packed||0),0));
+    document.getElementById('fsLoose').textContent=num(fReal.reduce((s,e)=>s+(+e.loose||0),0));
+    document.getElementById('fsDamage').textContent=num(fReal.reduce((s,e)=>s+(+e.damage||0),0));
     const parts=[]; if(fCat!=='all')parts.push(esc(fCat)); if(fStatus!=='all')parts.push({in:'In stock',low:'Low stock',out:'Out of stock',damage:'Has damage'}[fStatus]); if(q)parts.push('&ldquo;'+esc(q)+'&rdquo;');
     document.getElementById('fsLabel').innerHTML='<i class="ti ti-filter"></i> '+parts.join(' &middot; ');
     fsBox.style.display='flex';
@@ -1683,6 +1726,7 @@ function render(){
       <td class="prod-cell">
         <div class="prod-name">${thumb}<span title="${esc(e.product)}">${esc(e.product)}</span></div>
         ${e.category?`<div class="prod-cat">${esc(e.category)}</div>`:''}
+        ${links[String(e.id||'').trim()]?`<div class="prod-cat">Pack of ${links[String(e.id||'').trim()].pack}: follows the 1 Qty row, not in totals</div>`:''}
       </td>
       <td style="font-size:12px;color:var(--text2)">${e.hsn?esc(e.hsn):'—'}${e.gst!==''&&e.gst!=null&&e.gst!==undefined?`<div class="sub-line">GST ${esc(e.gst)}%</div>`:''}</td>
       <td class="num ${p>0?'stk-packed':'stk-zero'}">${num(p)}</td>
@@ -1703,7 +1747,7 @@ function render(){
 // ── LOW STOCK ALERT ──
 // Products still in stock but with packed + loose combined at 5 or below.
 function lowStockItems(){
-  return items
+  return realRows(items)
     .filter(e=>{ const t=(+e.packed||0)+(+e.loose||0); return t>0 && t<=5; })
     .sort((a,b)=>((+a.packed||0)+(+a.loose||0))-((+b.packed||0)+(+b.loose||0)));
 }
@@ -1741,8 +1785,9 @@ function exportCSV(){
   sorted.forEach(e=>{
     rows.push([e.sno||'',e.category||'',e.product||'',e.hsn||'',e.gst||'',e.packed||0,e.loose||0,e.damage||0,stockStatus(e).label,updatedFull(e),e.rating||'',e.amazonAvg||avg(e.amazon||[])||'',e.flipkartAvg||avg(e.flipkart||[])||'',e.keywords||'']);
   });
-  const P=items.reduce((s,e)=>s+(+e.packed||0),0), L=items.reduce((s,e)=>s+(+e.loose||0),0), Dm=items.reduce((s,e)=>s+(+e.damage||0),0);
-  rows.push([],['','','','','TOTAL',P,L,Dm,'','','','','','']);
+  const real=realRows(items);
+  const P=real.reduce((s,e)=>s+(+e.packed||0),0), L=real.reduce((s,e)=>s+(+e.loose||0),0), Dm=real.reduce((s,e)=>s+(+e.damage||0),0);
+  rows.push([],['','','','','TOTAL (1 Qty rows only)',P,L,Dm,'','','','','','']);
   const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
@@ -1818,7 +1863,7 @@ function reportData(){
   const basis  = document.getElementById('rBasis').value;
   const rop    = Math.max(0, parseInt(document.getElementById('rRop').value,10)||0);
   const dorm   = Math.max(1, parseInt(document.getElementById('rDormant').value,10)||90);
-  const src    = cat==='all' ? items.slice() : items.filter(e=>String(e.category||'').trim()===cat);
+  const src    = realRows(cat==='all' ? items.slice() : items.filter(e=>String(e.category||'').trim()===cat));
 
   // ── enrich every SKU once ──
   const P = src.map(e=>{

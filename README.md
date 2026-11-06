@@ -1,4 +1,6 @@
-# IBI Stock Availability v2.13
+# IBI Stock Availability v2.15
+
+v2.15 (6 Nov 2026): totals, low-stock alert, CSV total and the report count 1 Qty rows only; pack rows that follow a 1 Qty row are labelled and not added. A pack row with no clear 1 Qty row still counts, because it holds the real stock itself.
 
 v2.13 (27 Oct 2026): edge to edge on every screen size: no centred 1180 px column on laptops; full-bleed boxes with 10 px inner padding; the add-stock form puts four fields per row on wide screens.
 

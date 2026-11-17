@@ -1,4 +1,6 @@
-# IBI Stock Availability v2.15
+# IBI Stock Availability v2.16
+
+v2.16 (17 Nov 2026): one scroll only. The stock list no longer has its own scroll box inside the page; the page scrolls and the column headings stay frozen under the top bar (on phones the wide table still slides sideways).
 
 v2.15 (6 Nov 2026): totals, low-stock alert, CSV total and the report count 1 Qty rows only; pack rows that follow a 1 Qty row are labelled and not added. A pack row with no clear 1 Qty row still counts, because it holds the real stock itself.
 

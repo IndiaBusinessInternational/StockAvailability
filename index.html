@@ -226,7 +226,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:0.8
 .s-btn.rep-btn:hover{background:var(--cyan);color:#000}
 
 /* ── TABLE WRAP ── */
-.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg);overflow:hidden;margin-bottom:16px}
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg);overflow:visible;margin-bottom:16px;scroll-margin-top:60px}
 .filter-row{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3);flex-wrap:wrap}
 .filter-row select,.filter-row input{width:auto;font-size:13px;padding:6px 10px;background:var(--bg2)}
 .filter-summary{display:none;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--bg2);font-size:13px}
@@ -263,7 +263,13 @@ tr.row-editing td{background:var(--info-bg) !important}
 .action-btn.del:hover{color:var(--danger-text);background:var(--danger-bg)}
 .action-cell{display:flex;gap:6px;align-items:center;justify-content:center}
 .count-badge{font-size:11px;background:var(--bg3);color:var(--text2);padding:2px 9px;border-radius:20px;font-weight:400}
-.tbl-scroll{overflow:auto;max-height:calc(100vh - 62px);max-height:calc(100dvh - 62px);overscroll-behavior:contain}
+/* v2.16 (Founder 17 Nov 2026: "I need to scroll both to view all"): ONE scroll only. The list no longer has its own
+   scroll box; the page scrolls and the column headings stay frozen under the top bar. When the table fits the screen
+   it uses CSS sticky; when it is wider (phones) it scrolls sideways and tblHeadSync() slides the headings down. */
+.tbl-scroll{overflow-x:auto;overflow-y:hidden}
+.tbl-scroll th{position:relative;top:auto}
+.tbl-scroll.fits{overflow:visible}
+.tbl-scroll.fits th{position:sticky;top:var(--top-h,58px)}
 
 /* ── EMPTY / LOADING ── */
 .empty-state{text-align:center;padding:3rem;color:var(--text2);font-size:14px}
@@ -478,7 +484,7 @@ button,.btn,select,input,[role="button"]{overflow-wrap:normal}
     <div class="topbar-left">
       <div class="ibi-logo"><svg class="mark"><use href="#ibiMark"/></svg></div>
       <div>
-        <div class="app-name"><span class="app-title-txt">IBI Stock Availability</span> <span class="ver-badge" onclick="ceoUnlock()" title="">v2.15</span></div>
+        <div class="app-name"><span class="app-title-txt">IBI Stock Availability</span> <span class="ver-badge" onclick="ceoUnlock()" title="">v2.16</span></div>
       </div>
     </div>
     <div class="topbar-right">
@@ -746,7 +752,7 @@ button,.btn,select,input,[role="button"]{overflow-wrap:normal}
     </div>
   </div>
 
-  <div class="footer">IBI Stock Availability v2.15 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
+  <div class="footer">IBI Stock Availability v2.16 &mdash; India Business International &mdash; indiabusinessinternational@gmail.com</div>
 </div>
 
 <!-- DRAWER MENU -->
@@ -768,7 +774,7 @@ button,.btn,select,input,[role="button"]{overflow-wrap:normal}
   <button class="drawer-item" onclick="closeDrawer();openBackend()"><i class="ti ti-plug"></i> Backend Connection</button>
   <button class="drawer-item" id="drawerInstallBtn" style="display:none" onclick="triggerInstall();closeDrawer()"><i class="ti ti-device-mobile-down"></i> Install as App (PWA)</button>
   <div class="drawer-section-label">About</div>
-  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 2.15 — November 2026 · Totals count 1 Qty rows only</div>
+  <div class="drawer-item" style="cursor:pointer;color:var(--text2);font-size:12px" onclick="ceoUnlock()"><i class="ti ti-info-circle"></i> Version 2.16 — November 2026 · One scroll for the stock list</div>
 </div>
 
 <!-- REPORT MODAL -->
@@ -1743,6 +1749,29 @@ function render(){
     </tr>`;
   }).join('');
 }
+
+// ── v2.16 ONE SCROLL: frozen column headings for the page-scrolled stock list ──
+function tblHeadSync(){
+  const sc=document.querySelector('.tbl-scroll'); if(!sc) return;
+  const tb=sc.querySelector('table'), tbar=document.querySelector('.topbar');
+  const topH=tbar?tbar.getBoundingClientRect().height:58;
+  document.documentElement.style.setProperty('--top-h',topH+'px');
+  const fits=tb.offsetWidth<=sc.clientWidth+1;
+  sc.classList.toggle('fits',fits);
+  const ths=sc.querySelectorAll('thead th');
+  if(fits){ ths.forEach(t=>{ if(t.style.transform) t.style.transform=''; }); return; }
+  const r=tb.getBoundingClientRect(), headH=tb.tHead?tb.tHead.getBoundingClientRect().height:0;
+  const off=Math.max(0,Math.min(topH-r.top,r.height-headH));
+  const v=off>0?'translateY('+off+'px)':'';
+  ths.forEach(t=>{ t.style.transform=v; });
+}
+let _thRaf=0;
+function tblHeadSyncSoon(){ if(_thRaf) return; _thRaf=requestAnimationFrame(()=>{ _thRaf=0; tblHeadSync(); }); }
+window.addEventListener('scroll',tblHeadSyncSoon,{passive:true});
+window.addEventListener('resize',tblHeadSyncSoon);
+document.addEventListener('DOMContentLoaded',tblHeadSyncSoon);
+document.addEventListener('scroll',e=>{ if(e.target&&e.target.classList&&e.target.classList.contains('tbl-scroll')) tblHeadSyncSoon(); },{capture:true,passive:true});
+{ const _render0=render; render=function(){ const out=_render0.apply(this,arguments); tblHeadSyncSoon(); return out; }; }
 
 // ── LOW STOCK ALERT ──
 // Products still in stock but with packed + loose combined at 5 or below.
